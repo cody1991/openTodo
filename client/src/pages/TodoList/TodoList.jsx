@@ -5,7 +5,7 @@ import {
 } from 'antd';
 import {
   PlusOutlined, AppstoreOutlined, UnorderedListOutlined, HolderOutlined,
-  RightOutlined, EditOutlined, ShareAltOutlined, UnorderedListOutlined as ListIcon,
+  RightOutlined, DownOutlined, EditOutlined, ShareAltOutlined, UnorderedListOutlined as ListIcon,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
