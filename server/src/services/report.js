@@ -8,17 +8,41 @@ const PRIORITY_EMOJI = {
   low: '🟢',
 };
 
-function generateDailyReport(userId) {
-  const today = new Date().toISOString().split('T')[0];
+/** Returns 'YYYY-MM-DD' in the given IANA timezone. */
+function getLocalDate(timezone, offsetDays = 0) {
+  const d = new Date();
+  if (offsetDays) d.setUTCDate(d.getUTCDate() + offsetDays);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(d);
+}
+
+/** Returns 'HH:MM' (24-hour, zero-padded) in the given IANA timezone. */
+function getLocalHHMM(timezone) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date());
+}
+
+/** Format a UTC date string for display in the user's timezone. */
+function formatDueDate(utcString, timezone) {
+  return new Date(utcString).toLocaleString('zh-CN', { timeZone: timezone });
+}
+
+function generateDailyReport(userId, timezone) {
+  const tz = timezone || 'UTC';
+  const today = getLocalDate(tz);
+  const yesterday = getLocalDate(tz, -1);
 
   const completedYesterday = db
     .prepare(
       `SELECT t.title, c.name as category_name, t.priority
        FROM todos t LEFT JOIN categories c ON t.category_id = c.id
        WHERE t.user_id = ? AND t.status = 'completed'
-         AND DATE(t.completed_at) = DATE('now', '-1 day')`
+         AND DATE(t.completed_at) = ?`
     )
-    .all(userId);
+    .all(userId, yesterday);
 
   const pendingToday = db
     .prepare(
@@ -73,25 +97,34 @@ function generateDailyReport(userId) {
 async function sendDailyReports() {
   const users = db
     .prepare(
-      `SELECT id, username, wecom_webhook
+      `SELECT id, username, wecom_webhook, timezone, daily_report_time
        FROM users
        WHERE notifications_enabled = 1 AND daily_report_enabled = 1 AND wecom_webhook IS NOT NULL`
     )
     .all();
 
-  console.log(`[Report] Sending daily reports to ${users.length} user(s)`);
+  console.log(`[Report] Checking daily reports for ${users.length} user(s)`);
+
+  const now = new Date();
+  const nowMinute = now.getUTCMinutes();
 
   for (const user of users) {
-    const content = generateDailyReport(user.id);
+    const tz = user.timezone || 'UTC';
+    const localHHMM = getLocalHHMM(tz);
+    const reportTime = user.daily_report_time || '09:00';
+
+    if (localHHMM !== reportTime) continue;
+
+    const content = generateDailyReport(user.id, tz);
     await sendMarkdown(user.wecom_webhook, content);
-    console.log(`[Report] Sent to user: ${user.username}`);
+    console.log(`[Report] Sent to user: ${user.username} (${tz} ${localHHMM})`);
   }
 }
 
 async function sendDueDateReminders() {
   const todos = db
     .prepare(
-      `SELECT t.*, u.wecom_webhook, u.username
+      `SELECT t.*, u.wecom_webhook, u.username, u.timezone
        FROM todos t
        JOIN users u ON t.user_id = u.id
        WHERE t.status != 'completed'
@@ -105,16 +138,17 @@ async function sendDueDateReminders() {
 
   const grouped = {};
   todos.forEach((t) => {
-    if (!grouped[t.user_id]) grouped[t.user_id] = { webhook: t.wecom_webhook, items: [] };
+    if (!grouped[t.user_id]) grouped[t.user_id] = { webhook: t.wecom_webhook, timezone: t.timezone, items: [] };
     grouped[t.user_id].items.push(t);
   });
 
   for (const [, data] of Object.entries(grouped)) {
+    const tz = data.timezone || 'UTC';
     const content =
       `## ⏰ 即将到期提醒\n\n` +
       data.items
         .map((t) => {
-          const due = new Date(t.due_date).toLocaleString('zh-CN');
+          const due = formatDueDate(t.due_date, tz);
           return `> ${PRIORITY_EMOJI[t.priority] || '•'} **${t.title}** · 截止 ${due}`;
         })
         .join('\n') +

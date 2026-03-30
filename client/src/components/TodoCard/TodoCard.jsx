@@ -8,6 +8,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Viewer } from '@bytemd/react';
+import useAuthStore from '../../stores/authStore';
+import { toUserTz } from '../../utils/date';
 import gfm from '@bytemd/plugin-gfm';
 import highlight from '@bytemd/plugin-highlight';
 
@@ -29,12 +31,15 @@ const STATUS_CONFIG = {
 
 export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compact = false }) {
   const [expanded, setExpanded] = useState(true);
+  const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
 
   const priority   = PRIORITY_CONFIG[todo.priority] || PRIORITY_CONFIG.medium;
   const status     = STATUS_CONFIG[todo.status]     || STATUS_CONFIG.pending;
   const isCompleted = todo.status === 'completed';
-  const isOverdue   = todo.due_date && dayjs(todo.due_date).isBefore(dayjs()) && !isCompleted;
-  const isDueToday  = todo.due_date && dayjs(todo.due_date).isSame(dayjs(), 'day') && !isCompleted;
+  const dueDayjs    = todo.due_date ? toUserTz(todo.due_date, tz) : null;
+  const nowInTz     = dayjs().tz ? dayjs().tz(tz) : dayjs();
+  const isOverdue   = dueDayjs && dueDayjs.isBefore(nowInTz) && !isCompleted;
+  const isDueToday  = dueDayjs && dueDayjs.isSame(nowInTz, 'day') && !isCompleted;
 
   const menuItems = [
     { key: 'edit', icon: <EditOutlined />, label: '编辑', onClick: () => onEdit(todo) },
@@ -127,15 +132,15 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
             </Tag>
           )}
 
-          {todo.due_date && (
-            <Tooltip title={dayjs(todo.due_date).format('YYYY-MM-DD HH:mm')}>
+          {dueDayjs && (
+            <Tooltip title={dueDayjs.format('YYYY-MM-DD HH:mm')}>
               <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : isDueToday ? '#f59e0b' : '#9ca3af' }}>
                 <ClockCircleOutlined style={{ marginRight: 3 }} />
                 {isOverdue
-                  ? `逾期 ${dayjs().diff(dayjs(todo.due_date), 'day')} 天`
+                  ? `逾期 ${nowInTz.diff(dueDayjs, 'day')} 天`
                   : isDueToday
                   ? '今天截止'
-                  : dayjs(todo.due_date).format('M/D')}
+                  : dueDayjs.format('M/D')}
               </span>
             </Tooltip>
           )}

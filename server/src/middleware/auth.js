@@ -17,7 +17,7 @@ function authenticate(req, res, next) {
     const user = db
       .prepare(
         `SELECT u.id, u.username, u.email, u.role_id, u.avatar, u.notifications_enabled,
-                u.daily_report_enabled, u.daily_report_time, u.wecom_webhook,
+                u.daily_report_enabled, u.daily_report_time, u.wecom_webhook, u.timezone,
                 r.name as role_name, r.permissions
          FROM users u
          JOIN roles r ON u.role_id = r.id

@@ -4,9 +4,8 @@ const { sendDailyReports, sendDueDateReminders, updateOverdueStatus } = require(
 
 console.log('[Scheduler] Starting TODO scheduler...');
 
-// Send daily report at 09:00 every day
-cron.schedule('0 9 * * *', async () => {
-  console.log('[Scheduler] Running daily report...');
+// Check each minute whether any user's daily report time has arrived (in their timezone)
+cron.schedule('* * * * *', async () => {
   await sendDailyReports();
 }, { timezone: 'UTC' });
 

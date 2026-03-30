@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import {
-  Card, Form, Input, Button, Switch, TimePicker, Typography, message,
+  Card, Form, Input, Button, Switch, TimePicker, Select, Typography, message,
   Divider, Space, Alert, Row, Col, Tag,
 } from 'antd';
 import {
   LockOutlined, BellOutlined, WechatOutlined, SaveOutlined, CheckCircleOutlined,
-  CameraOutlined, LoadingOutlined,
+  CameraOutlined, LoadingOutlined, GlobalOutlined,
 } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -14,6 +14,28 @@ import { authApi, uploadApi } from '../../services/api';
 import './SettingsPage.css';
 
 const { Title, Text } = Typography;
+
+const TIMEZONE_OPTIONS = [
+  { value: 'UTC',                label: 'UTC+0  协调世界时 (UTC)' },
+  { value: 'Europe/London',      label: 'UTC+0  伦敦 (GMT/BST)' },
+  { value: 'Europe/Paris',       label: 'UTC+1/+2  巴黎 (CET/CEST)' },
+  { value: 'Europe/Amsterdam',   label: 'UTC+1/+2  阿姆斯特丹 (CET/CEST)' },
+  { value: 'Europe/Moscow',      label: 'UTC+3  莫斯科 (MSK)' },
+  { value: 'Asia/Dubai',         label: 'UTC+4  迪拜 (GST)' },
+  { value: 'Asia/Kolkata',       label: 'UTC+5:30  印度 (IST)' },
+  { value: 'Asia/Shanghai',      label: 'UTC+8  中国标准时间 (CST)' },
+  { value: 'Asia/Hong_Kong',     label: 'UTC+8  香港 (HKT)' },
+  { value: 'Asia/Singapore',     label: 'UTC+8  新加坡 (SGT)' },
+  { value: 'Asia/Tokyo',         label: 'UTC+9  东京 (JST)' },
+  { value: 'Australia/Sydney',   label: 'UTC+10/+11  悉尼 (AEST/AEDT)' },
+  { value: 'Pacific/Auckland',   label: 'UTC+12/+13  奥克兰 (NZST/NZDT)' },
+  { value: 'Pacific/Honolulu',   label: 'UTC-10  檀香山 (HST)' },
+  { value: 'America/Los_Angeles',label: 'UTC-8/-7  洛杉矶 (PST/PDT)' },
+  { value: 'America/Denver',     label: 'UTC-7/-6  丹佛 (MST/MDT)' },
+  { value: 'America/Chicago',    label: 'UTC-6/-5  芝加哥 (CST/CDT)' },
+  { value: 'America/New_York',   label: 'UTC-5/-4  纽约 (EST/EDT)' },
+  { value: 'America/Sao_Paulo',  label: 'UTC-3  圣保罗 (BRT)' },
+];
 
 
 export default function SettingsPage() {
@@ -174,6 +196,7 @@ export default function SettingsPage() {
                   ? dayjs(user.daily_report_time, 'HH:mm')
                   : dayjs('09:00', 'HH:mm'),
                 wecom_webhook: user?.wecom_webhook || '',
+                timezone: user?.timezone || 'UTC',
               }}
               onFinish={(values) => {
                 settingsMutation.mutate({
@@ -181,6 +204,7 @@ export default function SettingsPage() {
                   daily_report_enabled: values.daily_report_enabled,
                   daily_report_time: values.daily_report_time?.format('HH:mm'),
                   wecom_webhook: values.wecom_webhook,
+                  timezone: values.timezone,
                 });
               }}
             >
@@ -214,6 +238,26 @@ export default function SettingsPage() {
                 style={{ marginTop: 12 }}
               >
                 <TimePicker format="HH:mm" minuteStep={15} style={{ width: '100%' }} />
+              </Form.Item>
+
+              <Divider style={{ borderColor: '#2d2d4e', margin: '12px 0' }} />
+
+              <Form.Item
+                name="timezone"
+                label={
+                  <Space>
+                    <GlobalOutlined style={{ color: '#6366f1' }} />
+                    <span style={{ color: '#94a3b8' }}>时区</span>
+                  </Space>
+                }
+                extra={<Text type="secondary" style={{ fontSize: 12 }}>影响日期显示及报告发送时间，所有数据统一存储为 UTC+0</Text>}
+              >
+                <Select
+                  showSearch
+                  options={TIMEZONE_OPTIONS}
+                  optionFilterProp="label"
+                  placeholder="选择时区"
+                />
               </Form.Item>
 
               <Divider style={{ borderColor: '#2d2d4e', margin: '12px 0' }} />

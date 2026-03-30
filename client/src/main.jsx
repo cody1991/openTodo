@@ -5,10 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import 'dayjs/locale/zh-cn';
 import App from './App';
 import './index.css';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.locale('zh-cn');
 
 const queryClient = new QueryClient({

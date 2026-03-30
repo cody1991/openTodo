@@ -9,6 +9,8 @@ import highlight from '@bytemd/plugin-highlight';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { todoApi, categoryApi, tagApi, uploadApi } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
+import { utcToDayjsInTz, toUTCString } from '../../utils/date';
 import 'bytemd/dist/index.css';
 import 'highlight.js/styles/github-dark.css';
 import './TodoEditor.css';
@@ -34,6 +36,7 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
   const [uploading, setUploading] = useState(false);
   const [showExactTime, setShowExactTime] = useState(false);
   const queryClient = useQueryClient();
+  const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
 
   const { data: todoData } = useQuery({
     queryKey: ['todo', todoId],
@@ -96,8 +99,7 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
   useEffect(() => {
     if (todoData?.todo) {
       const t = todoData.todo;
-      const dueDate = t.due_date ? dayjs(t.due_date) : null;
-      // If the stored time is not midnight, treat it as an exact time entry
+      const dueDate = utcToDayjsInTz(t.due_date, tz);
       const hasExactTime = dueDate && !(dueDate.hour() === 0 && dueDate.minute() === 0);
       setShowExactTime(!!hasExactTime);
       form.setFieldsValue({
@@ -117,19 +119,19 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
         priority: 'high',
         status: 'pending',
         category_id: defaultCategoryId || undefined,
-        due_date: defaultDate ? dayjs(defaultDate) : null,
+        due_date: defaultDate ? utcToDayjsInTz(defaultDate, tz) : null,
         notify_enabled: true,
       });
       setContent('');
     }
-  }, [todoData, todoId, open, defaultCategoryId, defaultDate]);
+  }, [todoData, todoId, open, defaultCategoryId, defaultDate, tz]);
 
   const saveMutation = useMutation({
     mutationFn: (values) => {
       const payload = {
         ...values,
         content,
-        due_date: values.due_date ? values.due_date.toISOString() : null,
+        due_date: values.due_date ? toUTCString(values.due_date, tz) : null,
       };
       return todoId ? todoApi.update(todoId, payload) : todoApi.create(payload);
     },

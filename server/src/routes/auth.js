@@ -131,7 +131,7 @@ router.put('/password', authenticate, (req, res) => {
 });
 
 router.put('/settings', authenticate, (req, res) => {
-  const { wecom_webhook, notifications_enabled, daily_report_enabled, daily_report_time, avatar } =
+  const { wecom_webhook, notifications_enabled, daily_report_enabled, daily_report_time, avatar, timezone } =
     req.body;
 
   db.prepare(
@@ -141,6 +141,7 @@ router.put('/settings', authenticate, (req, res) => {
       daily_report_enabled = COALESCE(?, daily_report_enabled),
       daily_report_time = COALESCE(?, daily_report_time),
       avatar = COALESCE(?, avatar),
+      timezone = COALESCE(?, timezone),
       updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`
   ).run(
@@ -149,6 +150,7 @@ router.put('/settings', authenticate, (req, res) => {
     daily_report_enabled != null ? (daily_report_enabled ? 1 : 0) : null,
     daily_report_time,
     avatar,
+    timezone || null,
     req.user.id
   );
 
