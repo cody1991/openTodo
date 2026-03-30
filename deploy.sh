@@ -7,7 +7,8 @@ echo "Root: $ROOT_DIR"
 
 # 1. Pull latest code
 echo "[1/5] Pulling latest code..."
-git pull
+git fetch origin
+git reset --hard origin/master
 
 # 2. Install backend dependencies
 echo "[2/5] Installing server dependencies..."
