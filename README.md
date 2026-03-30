@@ -5,11 +5,14 @@
 **一款为个人与小团队打造的全功能开源任务管理系统**
 
 [![GitHub Stars](https://img.shields.io/github/stars/cody1991/openTodo?style=social)](https://github.com/cody1991/openTodo)
+[![Status](https://img.shields.io/badge/status-active%20development-orange.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev)
 
-[在线体验](#) · [快速开始](#快速开始) · [功能介绍](#功能介绍) · [部署文档](#生产部署)
+[快速开始](#快速开始) · [功能介绍](#功能介绍) · [部署文档](#生产部署)
+
+> ⚠️ **本项目正在积极开发中**，功能持续迭代，欢迎提 Issue 和 PR。
 
 </div>
 
