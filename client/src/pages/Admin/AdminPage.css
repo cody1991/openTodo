@@ -1,0 +1,21 @@
+.admin-page { width: 100%; }
+
+.admin-card {
+  background: #ffffff !important;
+  border: 1px solid #e8eaf0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+.admin-table .ant-table { background: transparent !important; }
+.admin-table .ant-table-thead > tr > th {
+  background: #f9fafb !important;
+  border-color: #f0f1f6 !important;
+  color: #9ca3af !important;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.admin-table .ant-table-tbody > tr > td { border-color: #f5f6fa !important; }
+.admin-table .ant-table-tbody > tr:hover > td { background: #f5f5ff !important; }

@@ -1,0 +1,78 @@
+.calendar-page { width: 100%; }
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.calendar-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.completed-dot { background: #d1d5db; }
+
+.calendar-container {
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.cal-event {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  overflow: hidden;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+.cal-event-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-completed { opacity: 0.5; text-decoration: line-through; }
+
+.fc .fc-daygrid-day-frame { min-height: 80px; }
+.fc .fc-daygrid-day-number { padding: 4px 6px; font-size: 13px; }
+
+/* Hide default FullCalendar popover (we use custom modal instead) */
+.fc-popover { display: none !important; }
+
+/* More events modal */
+.more-events-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+
+.more-event-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #f8f9fc;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.more-event-item:hover { background: #f0f0ff; }
+
+.more-event-item-left { display: flex; align-items: center; gap: 7px; min-width: 0; }
+
+.more-event-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.more-event-completed {
+  text-decoration: line-through;
+  color: #9ca3af;
+}

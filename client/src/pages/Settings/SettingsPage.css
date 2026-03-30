@@ -1,0 +1,112 @@
+.settings-page { width: 100%; }
+
+.settings-card {
+  background: #ffffff !important;
+  border: 1px solid #e8eaf0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+.user-info { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.user-avatar {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.user-avatar-upload {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+.user-avatar-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.user-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.user-avatar-upload:hover .user-avatar-overlay {
+  opacity: 1;
+}
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+
+/* Share Links Panel */
+.share-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.share-link-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8faff;
+  border: 1px solid #e8eaf0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.share-link-item:hover {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.06);
+}
+.share-link-expired {
+  opacity: 0.55;
+}
+.share-link-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.share-link-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.share-link-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+.share-link-headline {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.share-link-stats {
+  margin-top: 8px;
+}
+.share-link-url {
+  margin-top: 6px;
+  overflow: hidden;
+}
+.share-link-code {
+  font-size: 11px;
+  color: #6366f1;
+  background: rgba(99,102,241,0.06);
+  padding: 2px 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
+}
+.share-link-qr {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
