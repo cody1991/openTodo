@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
-  Modal, Steps, Button, Input, Form, Checkbox, Select, DatePicker,
-  Tag, Space, Typography, Divider, message, Alert, Tooltip, Radio,
+  Modal, Steps, Button, Input, Checkbox, Select, DatePicker,
+  Tag, Space, Typography, Divider, message, Tooltip, Radio,
   Tree, Badge, Empty,
 } from 'antd';
 import {
@@ -17,6 +17,18 @@ import './ShareModal.css';
 
 const { Text, Title, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
+
+function CatDot({ color }) {
+  return (
+    <span style={{
+      display: 'inline-block',
+      width: 8, height: 8,
+      borderRadius: '50%',
+      background: color || '#6366f1',
+      flexShrink: 0,
+    }} />
+  );
+}
 
 const STATUS_OPTIONS = [
   { label: '待处理', value: 'pending', color: '#faad14' },
@@ -36,6 +48,9 @@ const EXPIRES_OPTIONS = [
   { label: '永久有效', value: 'never' },
 ];
 
+// Sentinel value used in edit mode to mean "don't change the current expiry"
+const KEEP_EXPIRES = '__keep__';
+
 const DATE_FIELD_OPTIONS = [
   { label: '创建时间', value: 'created_at' },
   { label: '更新时间', value: 'updated_at' },
@@ -51,20 +66,32 @@ const STEPS = [
   { title: '有效期', icon: <ClockCircleOutlined /> },
 ];
 
-export default function ShareModal({ open, onClose }) {
+export default function ShareModal({ open, onClose, editLink = null }) {
+  const isEditMode = !!editLink;
   const queryClient = useQueryClient();
   const [current, setCurrent] = useState(0);
   const [copied, setCopied] = useState(false);
   const [createdLink, setCreatedLink] = useState(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const [form] = Form.useForm();
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState(null); // null = all
-  const [excludedTodoIds, setExcludedTodoIds] = useState([]);
-  const [selectedStatuses, setSelectedStatuses] = useState(['pending', 'in_progress', 'completed']);
-  const [dateField, setDateField] = useState('created_at');
-  const [dateRange, setDateRange] = useState(null);
-  const [expiresIn, setExpiresIn] = useState('never');
+  // name/headline are kept in explicit state so they survive step navigation
+  // (the Form component unmounts when user moves away from step 0)
+  const [name, setName] = useState(editLink?.name ?? '我的分享');
+  const [headline, setHeadline] = useState(editLink?.headline ?? '');
+
+  // Initialise from editLink when provided (component is remounted via key when editLink changes)
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState(editLink?.category_ids ?? null);
+  const [excludedTodoIds, setExcludedTodoIds] = useState(editLink?.excluded_todo_ids ?? []);
+  const [selectedStatuses, setSelectedStatuses] = useState(
+    editLink?.statuses ?? ['pending', 'in_progress', 'completed']
+  );
+  const [dateField, setDateField] = useState(editLink?.date_field ?? 'created_at');
+  const [dateRange, setDateRange] = useState(
+    editLink?.date_start && editLink?.date_end
+      ? [dayjs(editLink.date_start), dayjs(editLink.date_end)]
+      : null
+  );
+  const [expiresIn, setExpiresIn] = useState(isEditMode ? KEEP_EXPIRES : 'never');
+
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -89,18 +116,18 @@ export default function ShareModal({ open, onClose }) {
     onError: (e) => message.error(e.message || '创建失败'),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => shareApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['share-links'] });
+      message.success('分享链接已更新');
+      handleClose();
+    },
+    onError: (e) => message.error(e.message || '保存失败'),
+  });
+
   const rootCategories = categories.filter((c) => !c.parent_id);
   const getSubCategories = (parentId) => categories.filter((c) => c.parent_id === parentId);
-
-  const CatDot = ({ color }) => (
-    <span style={{
-      display: 'inline-block',
-      width: 8, height: 8,
-      borderRadius: '50%',
-      background: color || '#6366f1',
-      flexShrink: 0,
-    }} />
-  );
 
   const categoryTreeData = [
     ...rootCategories.map((parent) => ({
@@ -157,19 +184,22 @@ export default function ShareModal({ open, onClose }) {
   };
 
   const handleCreate = async () => {
-    const values = await form.validateFields();
     const payload = {
-      name: values.name || '我的分享',
-      headline: values.headline || null,
+      name: name.trim() || '我的分享',
+      headline: headline.trim() || null,
       category_ids: selectedCategoryIds,
       excluded_todo_ids: excludedTodoIds,
       statuses: selectedStatuses,
       date_field: dateField,
       date_start: dateRange ? dateRange[0].format('YYYY-MM-DD') : null,
       date_end: dateRange ? dateRange[1].format('YYYY-MM-DD') : null,
-      expires_in: expiresIn,
+      ...(expiresIn !== KEEP_EXPIRES && { expires_in: expiresIn }),
     };
-    createMutation.mutate(payload);
+    if (isEditMode) {
+      updateMutation.mutate({ id: editLink.id, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
   };
 
   const getShareUrl = (key) => `${window.location.origin}/share/${key}`;
@@ -183,17 +213,18 @@ export default function ShareModal({ open, onClose }) {
   const handleReset = () => {
     setCurrent(0);
     setCreatedLink(null);
+    setName('我的分享');
+    setHeadline('');
     setSelectedCategoryIds(null);
     setExcludedTodoIds([]);
     setSelectedStatuses(['pending', 'in_progress', 'completed']);
     setDateField('created_at');
     setDateRange(null);
     setExpiresIn('never');
-    form.resetFields();
   };
 
   const handleClose = () => {
-    handleReset();
+    if (!isEditMode) handleReset();
     onClose();
   };
 
@@ -206,19 +237,29 @@ export default function ShareModal({ open, onClose }) {
       case 0:
         return (
           <div className="share-step">
-            <Form form={form} layout="vertical">
-              <Form.Item label="分享名称" name="name" initialValue="我的分享">
-                <Input placeholder="给这次分享起个名字，方便管理" maxLength={50} showCount />
-              </Form.Item>
-              <Form.Item label="简介（显示在分享页顶部）" name="headline">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <div style={{ marginBottom: 6, fontSize: 13, color: '#374151' }}>分享名称</div>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="给这次分享起个名字，方便管理"
+                  maxLength={50}
+                  showCount
+                />
+              </div>
+              <div>
+                <div style={{ marginBottom: 6, fontSize: 13, color: '#374151' }}>简介（显示在分享页顶部）</div>
                 <Input.TextArea
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
                   placeholder="可选：介绍一下你在做什么，如「这是我2026年Q1的工作进展」"
                   rows={3}
                   maxLength={200}
                   showCount
                 />
-              </Form.Item>
-            </Form>
+              </div>
+            </div>
           </div>
         );
 
@@ -360,18 +401,34 @@ export default function ShareModal({ open, onClose }) {
           </div>
         );
 
-      case 4:
+      case 4: {
+        const currentExpiry = isEditMode && editLink.expires_at;
+        const expiresOptions = isEditMode
+          ? [{ label: '保持不变', value: KEEP_EXPIRES }, ...EXPIRES_OPTIONS]
+          : EXPIRES_OPTIONS;
         return (
           <div className="share-step">
             <div className="step-hint">
               <Text type="secondary">超过有效期后分享链接将自动失效。</Text>
+              {isEditMode && currentExpiry && (
+                <div style={{ marginTop: 6 }}>
+                  <Tag color={dayjs(editLink.expires_at).isBefore(dayjs()) ? 'red' : 'blue'}>
+                    当前有效期至 {dayjs(editLink.expires_at).format('YYYY-MM-DD HH:mm')}
+                  </Tag>
+                </div>
+              )}
+              {isEditMode && !currentExpiry && (
+                <div style={{ marginTop: 6 }}>
+                  <Tag color="green">当前永久有效</Tag>
+                </div>
+              )}
             </div>
             <Radio.Group
               value={expiresIn}
               onChange={(e) => setExpiresIn(e.target.value)}
               className="expires-radio-group"
             >
-              {EXPIRES_OPTIONS.map((opt) => (
+              {expiresOptions.map((opt) => (
                 <Radio.Button key={opt.value} value={opt.value} className="expires-radio-btn">
                   {opt.label}
                 </Radio.Button>
@@ -379,6 +436,7 @@ export default function ShareModal({ open, onClose }) {
             </Radio.Group>
           </div>
         );
+      }
 
       default:
         return null;
@@ -393,7 +451,7 @@ export default function ShareModal({ open, onClose }) {
         title={
           <Space>
             <ShareAltOutlined style={{ color: '#6366f1' }} />
-            <span>分享我的 TODO</span>
+            <span>{isEditMode ? '编辑分享链接' : '分享我的 TODO'}</span>
           </Space>
         }
         width={640}
@@ -469,10 +527,10 @@ export default function ShareModal({ open, onClose }) {
                 <Button
                   type="primary"
                   icon={<LinkOutlined />}
-                  loading={createMutation.isPending}
+                  loading={createMutation.isPending || updateMutation.isPending}
                   onClick={handleCreate}
                 >
-                  生成分享链接
+                  {isEditMode ? '保存修改' : '生成分享链接'}
                 </Button>
               )}
             </div>

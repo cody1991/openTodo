@@ -1,11 +1,11 @@
 import { useState, useEffect, Fragment } from 'react';
 import {
   Layout, Button, Input, Select, Space, Typography, Empty,
-  Spin, message, Tooltip, Row, Col, Badge, Segmented, Modal, Form, Popover, Dropdown,
+  Spin, message, Tooltip, Row, Col, Badge, Segmented, Modal, Form, Popover,
 } from 'antd';
 import {
   PlusOutlined, AppstoreOutlined, UnorderedListOutlined, HolderOutlined,
-  RightOutlined, DownOutlined, EditOutlined, ShareAltOutlined, UnorderedListOutlined as ListIcon,
+  RightOutlined, EditOutlined, ShareAltOutlined, UnorderedListOutlined as ListIcon,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -406,29 +406,20 @@ export default function TodoList() {
                   { value: 'kanban', icon: <AppstoreOutlined /> },
                 ]}
               />
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'new',
-                      icon: <PlusOutlined />,
-                      label: '新建分享',
-                      onClick: () => setShareModalOpen(true),
-                    },
-                    {
-                      key: 'manage',
-                      icon: <SettingOutlined />,
-                      label: '管理分享链接',
-                      onClick: () => setShareLinksModalOpen(true),
-                    },
-                  ],
-                }}
-                trigger={['click']}
+              <Button
+                icon={<ShareAltOutlined />}
+                onClick={() => setShareModalOpen(true)}
+                style={{ color: '#22c55e', borderColor: '#22c55e' }}
               >
-                <Button icon={<ShareAltOutlined />} className="btn-share">
-                  分享 <DownOutlined style={{ fontSize: 11 }} />
-                </Button>
-              </Dropdown>
+                新建分享
+              </Button>
+              <Button
+                icon={<SettingOutlined />}
+                onClick={() => setShareLinksModalOpen(true)}
+                style={{ color: '#22c55e', borderColor: '#22c55e' }}
+              >
+                管理链接
+              </Button>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}

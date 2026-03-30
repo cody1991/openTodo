@@ -4,7 +4,7 @@ import {
 } from 'antd';
 import {
   ShareAltOutlined, LinkOutlined, CopyOutlined, EyeOutlined,
-  DeleteOutlined, ClockCircleOutlined, PlusOutlined, QrcodeOutlined,
+  DeleteOutlined, ClockCircleOutlined, PlusOutlined, QrcodeOutlined, EditOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
@@ -16,6 +16,7 @@ import './ShareLinksModal.css';
 export default function ShareLinksModal({ open, onClose }) {
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState(null);
   const [copiedKey, setCopiedKey] = useState(null);
   const [expandedQr, setExpandedQr] = useState(null);
 
@@ -137,6 +138,14 @@ export default function ShareLinksModal({ open, onClose }) {
                           disabled={expired}
                         />
                       </Tooltip>
+                      <Tooltip title="编辑">
+                        <Button
+                          size="small" type="text"
+                          icon={<EditOutlined />}
+                          style={{ color: '#6366f1' }}
+                          onClick={() => setEditingLink(link)}
+                        />
+                      </Tooltip>
                       <Popconfirm
                         title="确定删除这个分享链接吗？"
                         description="删除后该链接将立即失效"
@@ -189,6 +198,12 @@ export default function ShareLinksModal({ open, onClose }) {
       </Modal>
 
       <ShareModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <ShareModal
+        key={editingLink?.id ?? 'edit'}
+        open={!!editingLink}
+        onClose={() => setEditingLink(null)}
+        editLink={editingLink}
+      />
     </>
   );
 }
