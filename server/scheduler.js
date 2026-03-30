@@ -1,4 +1,7 @@
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+// dotenv is loaded by the entry point (src/index.js or directly via node scheduler.js)
+if (!process.env.JWT_SECRET) {
+  require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+}
 const cron = require('node-cron');
 const { sendDailyReports, sendDueDateReminders, updateOverdueStatus } = require('./src/services/report');
 

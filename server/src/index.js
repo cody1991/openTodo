@@ -66,6 +66,9 @@ if (process.env.NODE_ENV === 'production') {
 // Run seed on startup
 seed();
 
+// Start scheduler (cron jobs for reports and reminders)
+require('../scheduler');
+
 app.listen(PORT, () => {
   console.log(`[Server] TODO Server running on port ${PORT}`);
   console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
