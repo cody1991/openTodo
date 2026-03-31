@@ -4,6 +4,9 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "Starting OpenTodo development server..."
 echo ""
 
+# Kill any existing server processes to avoid duplicates
+pkill -f "node src/index.js" 2>/dev/null && echo "[0/4] Stopped existing server processes." || true
+
 # Install dependencies
 echo "[1/4] Installing backend dependencies..."
 (cd "$ROOT_DIR/server" && npm install)
