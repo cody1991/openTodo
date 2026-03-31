@@ -9,6 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Line, Pie } from '@ant-design/charts';
 import dayjs from 'dayjs';
 import { statsApi } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
+import { toUserTz } from '../../utils/date';
 import './Dashboard.css';
 
 const { Title, Text } = Typography;
@@ -58,6 +60,7 @@ function StatCard({ title, value, suffix, icon, color, bgColor }) {
 }
 
 export default function Dashboard() {
+  const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
   const { data, isLoading } = useQuery({
     queryKey: ['stats', 'dashboard'],
     queryFn: statsApi.dashboard,
@@ -75,7 +78,7 @@ export default function Dashboard() {
   const { overview = {}, byCategory = [], byPriority = [], last7Days = [], urgentTodos = [] } = data || {};
 
   const chartData = Array.from({ length: 7 }, (_, i) => {
-    const date = dayjs().subtract(6 - i, 'day').format('YYYY-MM-DD');
+    const date = dayjs().tz(tz).subtract(6 - i, 'day').format('YYYY-MM-DD');
     const found = last7Days.find((d) => d.date === date);
     return { date: dayjs(date).format('M/D'), count: found?.count || 0 };
   });
@@ -92,7 +95,7 @@ export default function Dashboard() {
             <span className="gradient-text">工作台</span>
           </Title>
           <div className="dashboard-date">
-            {dayjs().format('YYYY年M月D日 dddd')}
+            {dayjs().tz(tz).format('YYYY年M月D日 dddd')}
             {overview.due_today > 0 && (
               <span style={{ marginLeft: 12, color: '#ffd166' }}>
                 今日截止 {overview.due_today} 项
@@ -276,7 +279,7 @@ export default function Dashboard() {
                       {todo.due_date && (
                         <Text style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                           <ClockCircleOutlined style={{ marginRight: 3 }} />
-                          {dayjs(todo.due_date).format('M/D HH:mm')}
+                          {toUserTz(todo.due_date, tz).format('M/D HH:mm')}
                         </Text>
                       )}
                     </div>

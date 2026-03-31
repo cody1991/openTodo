@@ -8,6 +8,8 @@ import { PlusOutlined, FireOutlined, CheckCircleOutlined } from '@ant-design/ico
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { statsApi, todoApi } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
+import { toUserTz } from '../../utils/date';
 import TodoEditor from '../../components/TodoEditor/TodoEditor';
 import './CalendarPage.css';
 
@@ -21,6 +23,7 @@ const PRIORITY_COLORS = {
 };
 
 export default function CalendarPage() {
+  const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [defaultDate, setDefaultDate] = useState(null);
@@ -34,8 +37,8 @@ export default function CalendarPage() {
     queryFn: () =>
       statsApi.calendar(
         viewRange || {
-          start: dayjs().startOf('month').toISOString(),
-          end: dayjs().endOf('month').toISOString(),
+          start: dayjs().tz(tz).startOf('month').toISOString(),
+          end: dayjs().tz(tz).endOf('month').toISOString(),
         }
       ),
   });
@@ -52,7 +55,7 @@ export default function CalendarPage() {
     return {
       id: String(todo.id),
       title: todo.title,
-      start: dayjs(date).format('YYYY-MM-DD'),
+      start: dayjs.utc(date).tz(tz).format('YYYY-MM-DD'),
       allDay: true,
       backgroundColor: PRIORITY_COLORS[todo.priority] || '#6366f1',
       borderColor: PRIORITY_COLORS[todo.priority] || '#6366f1',

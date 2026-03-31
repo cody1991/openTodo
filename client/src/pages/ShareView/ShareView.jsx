@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import ReactMarkdown from 'react-markdown';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 import remarkGfm from 'remark-gfm';
 import './ShareView.css';
 
@@ -55,9 +60,11 @@ function PriorityDot({ priority }) {
   );
 }
 
-function TodoCard({ todo }) {
+function TodoCard({ todo, ownerTz = 'UTC' }) {
   const [expanded, setExpanded] = useState(false);
   const hasContent = todo.content && todo.content.trim();
+  const dueDayjs = todo.due_date ? dayjs.utc(todo.due_date).tz(ownerTz) : null;
+  const nowInOwnerTz = dayjs().tz(ownerTz);
   return (
     <div className={`sv-todo-card ${todo.status === 'completed' ? 'sv-todo-completed' : ''}`}>
       <div className="sv-todo-header" onClick={() => hasContent && setExpanded(!expanded)}
@@ -70,9 +77,9 @@ function TodoCard({ todo }) {
         </div>
         <div className="sv-todo-meta">
           <StatusBadge status={todo.status} />
-          {todo.due_date && (
-            <span className={`sv-due-date ${dayjs(todo.due_date).isBefore(dayjs()) && todo.status !== 'completed' ? 'sv-overdue' : ''}`}>
-              截止 {dayjs(todo.due_date).format('MM/DD')}
+          {dueDayjs && (
+            <span className={`sv-due-date ${dueDayjs.isBefore(nowInOwnerTz) && todo.status !== 'completed' ? 'sv-overdue' : ''}`}>
+              截止 {dueDayjs.format('MM/DD')}
             </span>
           )}
           {todo.tags && todo.tags.length > 0 && todo.tags.map((tag) => (
@@ -113,7 +120,7 @@ function CatDot({ color }) {
   );
 }
 
-function SubCategorySection({ sub, todos }) {
+function SubCategorySection({ sub, todos, ownerTz }) {
   const [collapsed, setCollapsed] = useState(false);
   const done = todos.filter((t) => t.status === 'completed').length;
   const pct = todos.length > 0 ? Math.round((done / todos.length) * 100) : 0;
@@ -136,14 +143,14 @@ function SubCategorySection({ sub, todos }) {
       </div>
       {!collapsed && (
         <div className="sv-todo-list sv-todo-list--sub">
-          {todos.map((todo) => <TodoCard key={todo.id} todo={todo} />)}
+          {todos.map((todo) => <TodoCard key={todo.id} todo={todo} ownerTz={ownerTz} />)}
         </div>
       )}
     </div>
   );
 }
 
-function ParentCategorySection({ parent, directTodos, subSections }) {
+function ParentCategorySection({ parent, directTodos, subSections, ownerTz }) {
   const [collapsed, setCollapsed] = useState(false);
   const allTodos = [
     ...directTodos,
@@ -173,11 +180,11 @@ function ParentCategorySection({ parent, directTodos, subSections }) {
         <div className="sv-parent-body">
           {directTodos.length > 0 && (
             <div className="sv-todo-list">
-              {directTodos.map((todo) => <TodoCard key={todo.id} todo={todo} />)}
+              {directTodos.map((todo) => <TodoCard key={todo.id} todo={todo} ownerTz={ownerTz} />)}
             </div>
           )}
           {subSections.map(({ sub, todos }) => (
-            <SubCategorySection key={sub.id} sub={sub} todos={todos} />
+            <SubCategorySection key={sub.id} sub={sub} todos={todos} ownerTz={ownerTz} />
           ))}
         </div>
       )}
@@ -273,6 +280,7 @@ export default function ShareView() {
   }
 
   const { share, owner, todos, categories } = data;
+  const ownerTz = owner.timezone || 'UTC';
 
   // Build category maps
   const catMap = {};
@@ -372,6 +380,7 @@ export default function ShareView() {
                   parent={parent}
                   directTodos={directTodos}
                   subSections={subSections}
+                  ownerTz={ownerTz}
                 />
               ))}
               {uncategorized.length > 0 && (
@@ -379,6 +388,7 @@ export default function ShareView() {
                   parent={{ id: 'uncategorized', name: '未分类', color: '#475569' }}
                   directTodos={uncategorized}
                   subSections={[]}
+                  ownerTz={ownerTz}
                 />
               )}
             </div>

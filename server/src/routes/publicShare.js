@@ -15,7 +15,7 @@ router.get('/:key', (req, res) => {
 
   // Get owner info
   const owner = db
-    .prepare('SELECT id, username, avatar FROM users WHERE id = ?')
+    .prepare('SELECT id, username, avatar, timezone FROM users WHERE id = ?')
     .get(link.user_id);
 
   // Build todos query
@@ -135,6 +135,7 @@ router.get('/:key', (req, res) => {
     owner: {
       username: owner.username,
       avatar: owner.avatar,
+      timezone: owner.timezone || 'UTC',
     },
     todos: todosWithTags,
     categories,

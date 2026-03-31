@@ -1,6 +1,6 @@
 const db = require('../db');
 const { sendMarkdown } = require('./wecom');
-const { getLocalDate, getLocalHHMM, getLocalDayUTCBounds, formatDueDate } = require('../utils/dateUtils');
+const { getLocalDate, getLocalHHMM, getLocalDayUTCBounds, formatDueDate, utcToLocalDate } = require('../utils/dateUtils');
 
 const PRIORITY_EMOJI = {
   urgent: '🔴',
@@ -61,7 +61,7 @@ function generateDailyReport(userId, timezone) {
     content += `**📌 待办事项 (${pendingToday.length} 项)**\n`;
     pendingToday.forEach((t) => {
       const cat = t.category_name ? `[${t.category_name}]` : '';
-      const due = t.due_date ? ` _(截止 ${t.due_date.split('T')[0]})_` : '';
+      const due = t.due_date ? ` _(截止 ${utcToLocalDate(t.due_date, tz)})_` : '';
       content += `> ${PRIORITY_EMOJI[t.priority] || '•'} ${cat} ${t.title}${due}\n`;
     });
     content += '\n';
