@@ -4,8 +4,17 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "Starting OpenTodo development server..."
 echo ""
 
-# Kill any existing server processes to avoid duplicates
-pkill -f "node src/index.js" 2>/dev/null && echo "[0/4] Stopped existing server processes." || true
+PID_FILE="$ROOT_DIR/.server.pid"
+
+# Kill previous instance using saved PID
+if [ -f "$PID_FILE" ]; then
+  OLD_PID=$(cat "$PID_FILE")
+  if kill -0 "$OLD_PID" 2>/dev/null; then
+    kill "$OLD_PID" 2>/dev/null
+    echo "[0/4] Stopped existing server process (PID $OLD_PID)."
+  fi
+  rm -f "$PID_FILE"
+fi
 
 # Install dependencies
 echo "[1/4] Installing backend dependencies..."
@@ -18,6 +27,7 @@ echo ""
 echo "[3/4] Starting backend server (port 3000)..."
 (cd "$ROOT_DIR/server" && node src/index.js) &
 SERVER_PID=$!
+echo "$SERVER_PID" > "$PID_FILE"
 
 sleep 2
 
@@ -36,6 +46,6 @@ echo "   Admin:    admin / Admin123456!"
 echo ""
 echo "Press Ctrl+C to stop all servers."
 
-trap "kill $SERVER_PID $CLIENT_PID 2>/dev/null; exit 0" SIGINT SIGTERM
+trap "kill $SERVER_PID $CLIENT_PID 2>/dev/null; rm -f '$PID_FILE'; exit 0" SIGINT SIGTERM
 
 wait

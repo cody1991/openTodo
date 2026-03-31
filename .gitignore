@@ -40,3 +40,4 @@ client/build/
 # Temporary files
 tmp/
 temp/
+.server.pid
