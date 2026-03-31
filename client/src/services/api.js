@@ -10,9 +10,10 @@ api.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const url = err.config?.url || '';
-    // Don't redirect on auth endpoints — let the form handle the error itself
     const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
-    if (err.response?.status === 401 && !isAuthEndpoint) {
+    const isPublicEndpoint = url.includes('/public/share/');
+    const isSharePage = window.location.pathname.startsWith('/share/');
+    if (err.response?.status === 401 && !isAuthEndpoint && !isPublicEndpoint && !isSharePage) {
       window.location.href = '/login';
     }
     return Promise.reject(err.response?.data || err);

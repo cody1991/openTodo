@@ -7,6 +7,7 @@ const useAuthStore = create(
     (set, get) => ({
       user: null,
       loading: false,
+      initialized: false,
 
       login: async (credentials) => {
         set({ loading: true });
@@ -40,10 +41,10 @@ const useAuthStore = create(
       fetchMe: async () => {
         try {
           const data = await authApi.me();
-          set({ user: data.user });
+          set({ user: data.user, initialized: true });
           return data.user;
         } catch {
-          set({ user: null });
+          set({ user: null, initialized: true });
           return null;
         }
       },

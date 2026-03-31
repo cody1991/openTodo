@@ -4,6 +4,22 @@ const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { authenticate } = require('../middleware/auth');
 
+function getAllowedWecomHosts() {
+  const envVal = process.env.WECOM_ALLOWED_HOSTS;
+  if (envVal) return envVal.split(',').map((h) => h.trim()).filter(Boolean);
+  return ['qyapi.weixin.qq.com'];
+}
+
+function isValidWebhookUrl(url) {
+  if (!url) return true;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && getAllowedWecomHosts().includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 const router = express.Router();
 
 const COOKIE_OPTIONS = {
@@ -133,6 +149,10 @@ router.put('/password', authenticate, (req, res) => {
 router.put('/settings', authenticate, (req, res) => {
   const { wecom_webhook, notifications_enabled, daily_report_enabled, daily_report_time, avatar, timezone } =
     req.body;
+
+  if (!isValidWebhookUrl(wecom_webhook)) {
+    return res.status(400).json({ message: 'Webhook URL 不合法，仅支持企业微信官方地址' });
+  }
 
   db.prepare(
     `UPDATE users SET

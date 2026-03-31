@@ -1,12 +1,16 @@
 const express = require('express');
 const db = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { getLocalDate, getLocalDayUTCBounds, utcToLocalDate } = require('../utils/dateUtils');
 
 const router = express.Router();
 router.use(authenticate);
 
 router.get('/dashboard', (req, res) => {
   const uid = req.user.id;
+  const tz = req.user.timezone || 'UTC';
+  const localToday = getLocalDate(tz);
+  const [todayStart, todayEnd] = getLocalDayUTCBounds(localToday, tz);
 
   const overview = db
     .prepare(
@@ -17,10 +21,10 @@ router.get('/dashboard', (req, res) => {
         SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
         SUM(CASE WHEN priority = 'urgent' AND status != 'completed' THEN 1 ELSE 0 END) as urgent,
         SUM(CASE WHEN due_date IS NOT NULL AND due_date < CURRENT_TIMESTAMP AND status != 'completed' THEN 1 ELSE 0 END) as overdue,
-        SUM(CASE WHEN DATE(due_date) = DATE('now') AND status != 'completed' THEN 1 ELSE 0 END) as due_today
+        SUM(CASE WHEN due_date >= ? AND due_date < ? AND status != 'completed' THEN 1 ELSE 0 END) as due_today
        FROM todos WHERE user_id = ?`
     )
-    .get(uid);
+    .get(todayStart, todayEnd, uid);
 
   const byCategory = db
     .prepare(
@@ -51,16 +55,26 @@ router.get('/dashboard', (req, res) => {
     )
     .all(uid);
 
-  const last7Days = db
+  // Fetch last 7 days completions and group by user's local date
+  const localSixDaysAgo = getLocalDate(tz, -6);
+  const [rangeStart] = getLocalDayUTCBounds(localSixDaysAgo, tz);
+  const [, rangeEnd] = getLocalDayUTCBounds(localToday, tz);
+  const completedRows = db
     .prepare(
-      `SELECT DATE(completed_at) as date, COUNT(*) as count
-       FROM todos
+      `SELECT completed_at FROM todos
        WHERE user_id = ? AND status = 'completed'
-         AND completed_at >= DATE('now', '-6 days')
-       GROUP BY DATE(completed_at)
-       ORDER BY date`
+         AND completed_at >= ? AND completed_at < ?`
     )
-    .all(uid);
+    .all(uid, rangeStart, rangeEnd);
+
+  const dateMap = {};
+  completedRows.forEach((row) => {
+    const localDate = utcToLocalDate(row.completed_at, tz);
+    dateMap[localDate] = (dateMap[localDate] || 0) + 1;
+  });
+  const last7Days = Object.entries(dateMap)
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   const urgentTodos = db
     .prepare(
@@ -78,18 +92,25 @@ router.get('/dashboard', (req, res) => {
 
 router.get('/report', (req, res) => {
   const uid = req.user.id;
+  const tz = req.user.timezone || 'UTC';
   const { date } = req.query;
-  const targetDate = date || new Date().toISOString().split('T')[0];
+  const targetDate = date || getLocalDate(tz);
+
+  // Compute yesterday's UTC bounds in the user's local timezone
+  const targetDateObj = new Date(targetDate + 'T12:00:00Z');
+  targetDateObj.setUTCDate(targetDateObj.getUTCDate() - 1);
+  const yesterday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(targetDateObj);
+  const [yesterdayStart, yesterdayEnd] = getLocalDayUTCBounds(yesterday, tz);
 
   const completedYesterday = db
     .prepare(
       `SELECT t.*, c.name as category_name
        FROM todos t LEFT JOIN categories c ON t.category_id = c.id
        WHERE t.user_id = ? AND t.status = 'completed'
-         AND DATE(t.completed_at) = DATE(?, '-1 day')
+         AND t.completed_at >= ? AND t.completed_at < ?
        ORDER BY t.completed_at DESC`
     )
-    .all(uid, targetDate);
+    .all(uid, yesterdayStart, yesterdayEnd);
 
   const pendingToday = db
     .prepare(

@@ -1,4 +1,10 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+
+if (!process.env.JWT_SECRET) {
+  console.error('[Server] FATAL: JWT_SECRET is not set. Please configure it in your .env file.');
+  process.exit(1);
+}
+
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -65,6 +71,15 @@ if (process.env.NODE_ENV === 'production') {
 
 // Run seed on startup
 seed();
+
+// Global error handler
+app.use((err, req, res, next) => {
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ message: err.message });
+  }
+  console.error('[Server] Unhandled error:', err);
+  res.status(500).json({ message: '服务器内部错误' });
+});
 
 app.listen(PORT, () => {
   console.log(`[Server] TODO Server running on port ${PORT}`);

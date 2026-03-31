@@ -1,5 +1,6 @@
 const db = require('../db');
 const { sendMarkdown } = require('./wecom');
+const { getLocalDate, getLocalHHMM, getLocalDayUTCBounds, formatDueDate } = require('../utils/dateUtils');
 
 const PRIORITY_EMOJI = {
   urgent: '🔴',
@@ -8,41 +9,20 @@ const PRIORITY_EMOJI = {
   low: '🟢',
 };
 
-/** Returns 'YYYY-MM-DD' in the given IANA timezone. */
-function getLocalDate(timezone, offsetDays = 0) {
-  const d = new Date();
-  if (offsetDays) d.setUTCDate(d.getUTCDate() + offsetDays);
-  return new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(d);
-}
-
-/** Returns 'HH:MM' (24-hour, zero-padded) in the given IANA timezone. */
-function getLocalHHMM(timezone) {
-  return new Intl.DateTimeFormat('en-GB', {
-    timeZone: timezone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date());
-}
-
-/** Format a UTC date string for display in the user's timezone. */
-function formatDueDate(utcString, timezone) {
-  return new Date(utcString).toLocaleString('zh-CN', { timeZone: timezone });
-}
-
 function generateDailyReport(userId, timezone) {
   const tz = timezone || 'UTC';
   const today = getLocalDate(tz);
   const yesterday = getLocalDate(tz, -1);
 
+  const [yesterdayStart, yesterdayEnd] = getLocalDayUTCBounds(yesterday, tz);
   const completedYesterday = db
     .prepare(
       `SELECT t.title, c.name as category_name, t.priority
        FROM todos t LEFT JOIN categories c ON t.category_id = c.id
        WHERE t.user_id = ? AND t.status = 'completed'
-         AND DATE(t.completed_at) = ?`
+         AND t.completed_at >= ? AND t.completed_at < ?`
     )
-    .all(userId, yesterday);
+    .all(userId, yesterdayStart, yesterdayEnd);
 
   const pendingToday = db
     .prepare(
@@ -104,9 +84,6 @@ async function sendDailyReports() {
     .all();
 
   console.log(`[Report] Checking daily reports for ${users.length} user(s)`);
-
-  const now = new Date();
-  const nowMinute = now.getUTCMinutes();
 
   for (const user of users) {
     const tz = user.timezone || 'UTC';

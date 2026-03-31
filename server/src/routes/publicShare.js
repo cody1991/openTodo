@@ -87,17 +87,24 @@ router.get('/:key', (req, res) => {
 
   const todos = db.prepare(sql).all(...params);
 
-  // Attach tags
-  const todosWithTags = todos.map((todo) => {
-    const tags = db
+  // Attach tags (batch query to avoid N+1)
+  const tagMap = {};
+  if (todos.length > 0) {
+    const todoIds = todos.map((t) => t.id);
+    const placeholders = todoIds.map(() => '?').join(',');
+    const allTags = db
       .prepare(
-        `SELECT t.* FROM tags t
+        `SELECT tt.todo_id, t.* FROM tags t
          JOIN todo_tags tt ON tt.tag_id = t.id
-         WHERE tt.todo_id = ?`
+         WHERE tt.todo_id IN (${placeholders})`
       )
-      .all(todo.id);
-    return { ...todo, tags };
-  });
+      .all(...todoIds);
+    allTags.forEach(({ todo_id, ...tag }) => {
+      if (!tagMap[todo_id]) tagMap[todo_id] = [];
+      tagMap[todo_id].push(tag);
+    });
+  }
+  const todosWithTags = todos.map((todo) => ({ ...todo, tags: tagMap[todo.id] || [] }));
 
   // Get categories summary for sidebar
   const categories = db

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { Octokit } = require('@octokit/rest');
 const { authenticate } = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
 
 const router = express.Router();
 router.use(authenticate);
@@ -57,30 +58,37 @@ function uploadToLocal(buffer, filename) {
   return `/uploads/${filename}`;
 }
 
-router.post('/image', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file provided' });
-  }
+router.post(
+  '/image',
+  (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) return res.status(400).json({ message: err.message });
+      next();
+    });
+  },
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file provided' });
+    }
 
-  const ext = (req.file.originalname.split('.').pop() || 'png').toLowerCase();
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+    const ext = (req.file.originalname.split('.').pop() || 'png').toLowerCase();
+    if (!ALLOWED_EXTS.includes(ext)) {
+      return res.status(400).json({ message: '不支持的图片格式' });
+    }
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  try {
-    // Try GitHub first
-    const url = await uploadToGitHub(req.file.buffer, filename);
-    console.log(`[Upload] GitHub: ${url}`);
-    return res.json({ url, storage: 'github' });
-  } catch (githubErr) {
-    console.warn(`[Upload] GitHub failed (${githubErr.message}), falling back to local storage`);
     try {
+      const url = await uploadToGitHub(req.file.buffer, filename);
+      console.log(`[Upload] GitHub: ${url}`);
+      return res.json({ url, storage: 'github' });
+    } catch (githubErr) {
+      console.warn(`[Upload] GitHub failed (${githubErr.message}), falling back to local storage`);
       const url = uploadToLocal(req.file.buffer, filename);
       console.log(`[Upload] Local: ${url}`);
       return res.json({ url, storage: 'local' });
-    } catch (localErr) {
-      console.error('[Upload] Local storage also failed:', localErr.message);
-      return res.status(500).json({ message: '图片上传失败', error: localErr.message });
     }
-  }
-});
+  })
+);
 
 module.exports = router;

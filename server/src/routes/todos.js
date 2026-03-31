@@ -85,18 +85,19 @@ router.get('/', (req, res) => {
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  sql += ` ORDER BY
+  const orderBy = ` ORDER BY
     CASE t.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
     t.due_date ASC NULLS LAST,
     t.created_at DESC`;
 
   const offset = (parseInt(page) - 1) * parseInt(limit);
-  const countSql = `SELECT COUNT(DISTINCT t.id) as total FROM todos t LEFT JOIN todo_tags tt ON tt.todo_id = t.id WHERE t.user_id = ?${sql.split('WHERE t.user_id = ?')[1].split('ORDER BY')[0]}`;
 
-  const countParams = params.slice();
-  const { total } = db.prepare(countSql).get(countParams);
+  const baseSql = sql;
+  const baseParams = params.slice();
+  const countSql = `SELECT COUNT(DISTINCT t.id) as total FROM todos t LEFT JOIN categories c ON t.category_id = c.id LEFT JOIN todo_tags tt ON tt.todo_id = t.id WHERE t.user_id = ?${baseSql.split('WHERE t.user_id = ?')[1]}`;
+  const { total } = db.prepare(countSql).get(baseParams);
 
-  sql += ` LIMIT ? OFFSET ?`;
+  sql += orderBy + ` LIMIT ? OFFSET ?`;
   params.push(parseInt(limit), offset);
 
   const todos = db.prepare(sql).all(params);
@@ -138,10 +139,32 @@ router.get('/:id', (req, res) => {
   res.json({ todo: { ...todo, tags } });
 });
 
+function validateCategoryOwnership(categoryId, userId) {
+  if (!categoryId) return true;
+  const cat = db.prepare('SELECT id FROM categories WHERE id = ? AND user_id = ?').get(categoryId, userId);
+  return !!cat;
+}
+
+function validateTagsOwnership(tagIds, userId) {
+  if (!tagIds || tagIds.length === 0) return true;
+  const placeholders = tagIds.map(() => '?').join(',');
+  const owned = db
+    .prepare(`SELECT id FROM tags WHERE id IN (${placeholders}) AND user_id = ?`)
+    .all(...tagIds, userId);
+  return owned.length === tagIds.length;
+}
+
 router.post('/', (req, res) => {
   const { title, content = '', category_id, priority = 'medium', due_date, tag_ids = [], notify_enabled = 1 } =
     req.body;
   if (!title) return res.status(400).json({ message: 'title required' });
+
+  if (!validateCategoryOwnership(category_id, req.user.id)) {
+    return res.status(400).json({ message: '分类不存在或无权使用' });
+  }
+  if (!validateTagsOwnership(tag_ids, req.user.id)) {
+    return res.status(400).json({ message: '标签不存在或无权使用' });
+  }
 
   const result = db
     .prepare(
@@ -168,6 +191,13 @@ router.put('/:id', (req, res) => {
   if (!existing) return res.status(404).json({ message: 'Todo not found' });
 
   const { title, content, category_id, priority, due_date, status, tag_ids, notify_enabled } = req.body;
+
+  if (category_id !== undefined && !validateCategoryOwnership(category_id, req.user.id)) {
+    return res.status(400).json({ message: '分类不存在或无权使用' });
+  }
+  if (tag_ids !== undefined && !validateTagsOwnership(tag_ids, req.user.id)) {
+    return res.status(400).json({ message: '标签不存在或无权使用' });
+  }
 
   const setClauses = [];
   const values = [];

@@ -16,8 +16,12 @@ const ShareView = lazy(() => import('./pages/ShareView/ShareView'));
 
 function ProtectedRoute({ children }) {
   const user = useAuthStore((s) => s.user);
+  const initialized = useAuthStore((s) => s.initialized);
   const location = useLocation();
 
+  if (!initialized) {
+    return PageLoader;
+  }
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -39,10 +43,10 @@ const PageLoader = (
 );
 
 export default function App() {
-  const { user, fetchMe } = useAuthStore();
+  const { fetchMe } = useAuthStore();
 
   useEffect(() => {
-    if (user) fetchMe();
+    fetchMe();
   }, []);
 
   return (
