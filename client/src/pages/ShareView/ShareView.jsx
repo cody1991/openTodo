@@ -76,7 +76,6 @@ function TodoCard({ todo, ownerTz = 'UTC' }) {
           </span>
         </div>
         <div className="sv-todo-meta">
-          <StatusBadge status={todo.status} />
           {dueDayjs && (
             <span className={`sv-due-date ${dueDayjs.isBefore(nowInOwnerTz) && todo.status !== 'completed' ? 'sv-overdue' : ''}`}>
               截止 {dueDayjs.format('MM/DD')}
@@ -192,6 +191,80 @@ function ParentCategorySection({ parent, directTodos, subSections, ownerTz }) {
   );
 }
 
+const STATUS_SECTION_CONFIG = {
+  in_progress: { label: '进行中', icon: '🔵', defaultCollapsed: false },
+  pending:     { label: '待处理', icon: '🟡', defaultCollapsed: false },
+  completed:   { label: '已完成', icon: '✅', defaultCollapsed: true  },
+};
+
+function buildCategorySections(filteredTodos, rootCats, subsByParent) {
+  const todosByCat = {};
+  const uncategorized = [];
+  filteredTodos.forEach((todo) => {
+    if (!todo.category_id) {
+      uncategorized.push(todo);
+    } else {
+      if (!todosByCat[todo.category_id]) todosByCat[todo.category_id] = [];
+      todosByCat[todo.category_id].push(todo);
+    }
+  });
+  const parentSections = rootCats
+    .map((parent) => {
+      const directTodos = todosByCat[parent.id] || [];
+      const subs = subsByParent[parent.id] || [];
+      const subSections = subs
+        .map((sub) => ({ sub, todos: todosByCat[sub.id] || [] }))
+        .filter((s) => s.todos.length > 0);
+      return { parent, directTodos, subSections };
+    })
+    .filter((s) => s.directTodos.length > 0 || s.subSections.length > 0);
+  return { parentSections, uncategorized };
+}
+
+function StatusSection({ statusKey, todos, rootCats, subsByParent, ownerTz }) {
+  const cfg = STATUS_SECTION_CONFIG[statusKey];
+  const [collapsed, setCollapsed] = useState(cfg.defaultCollapsed);
+  if (todos.length === 0) return null;
+
+  const { parentSections, uncategorized } = buildCategorySections(todos, rootCats, subsByParent);
+
+  return (
+    <div className={`sv-status-section sv-status-section--${statusKey}`}>
+      <div className="sv-status-header" onClick={() => setCollapsed((c) => !c)}>
+        <div className="sv-status-left">
+          <span className="sv-status-icon">{cfg.icon}</span>
+          <span className="sv-status-name">{cfg.label}</span>
+          <span className="sv-status-count">{todos.length}</span>
+        </div>
+        <span className="sv-collapse-icon">{collapsed ? '▶' : '▼'}</span>
+      </div>
+      {!collapsed && (
+        <div className="sv-status-body">
+          <div className="sv-groups">
+            {parentSections.map(({ parent, directTodos, subSections }) => (
+              <ParentCategorySection
+                key={parent.id}
+                parent={parent}
+                directTodos={directTodos}
+                subSections={subSections}
+                ownerTz={ownerTz}
+              />
+            ))}
+            {uncategorized.length > 0 && (
+              <ParentCategorySection
+                parent={{ id: 'uncategorized', name: '未分类', color: '#475569' }}
+                directTodos={uncategorized}
+                subSections={[]}
+                ownerTz={ownerTz}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StatsRow({ todos }) {
   const pending = todos.filter((t) => t.status === 'pending').length;
   const inProgress = todos.filter((t) => t.status === 'in_progress').length;
@@ -283,9 +356,6 @@ export default function ShareView() {
   const ownerTz = owner.timezone || 'UTC';
 
   // Build category maps
-  const catMap = {};
-  categories.forEach((c) => { catMap[c.id] = c; });
-
   const rootCats = categories.filter((c) => !c.parent_id);
   const subsByParent = {};
   categories.filter((c) => c.parent_id).forEach((sub) => {
@@ -293,29 +363,11 @@ export default function ShareView() {
     subsByParent[sub.parent_id].push(sub);
   });
 
-  // Group todos by category_id
-  const todosByCat = {};
-  const uncategorized = [];
-  todos.forEach((todo) => {
-    if (!todo.category_id) {
-      uncategorized.push(todo);
-    } else {
-      if (!todosByCat[todo.category_id]) todosByCat[todo.category_id] = [];
-      todosByCat[todo.category_id].push(todo);
-    }
-  });
-
-  // Build hierarchical sections: parent → subs → todos
-  const parentSections = rootCats
-    .map((parent) => {
-      const directTodos = todosByCat[parent.id] || [];
-      const subs = subsByParent[parent.id] || [];
-      const subSections = subs
-        .map((sub) => ({ sub, todos: todosByCat[sub.id] || [] }))
-        .filter((s) => s.todos.length > 0);
-      return { parent, directTodos, subSections };
-    })
-    .filter((s) => s.directTodos.length > 0 || s.subSections.length > 0);
+  // Split todos by status
+  const inProgressTodos = todos.filter((t) => t.status === 'in_progress');
+  const pendingTodos    = todos.filter((t) => t.status === 'pending');
+  const completedTodos  = todos.filter((t) => t.status === 'completed');
+  const hasContent = todos.length > 0;
 
   return (
     <div className="sv-root">
@@ -367,30 +419,16 @@ export default function ShareView() {
 
         {/* Content */}
         <main className="sv-main">
-          {parentSections.length === 0 && uncategorized.length === 0 ? (
+          {!hasContent ? (
             <div className="sv-empty">
               <span className="sv-empty-icon">✨</span>
               <p>暂无待分享的 TODO</p>
             </div>
           ) : (
-            <div className="sv-groups">
-              {parentSections.map(({ parent, directTodos, subSections }) => (
-                <ParentCategorySection
-                  key={parent.id}
-                  parent={parent}
-                  directTodos={directTodos}
-                  subSections={subSections}
-                  ownerTz={ownerTz}
-                />
-              ))}
-              {uncategorized.length > 0 && (
-                <ParentCategorySection
-                  parent={{ id: 'uncategorized', name: '未分类', color: '#475569' }}
-                  directTodos={uncategorized}
-                  subSections={[]}
-                  ownerTz={ownerTz}
-                />
-              )}
+            <div className="sv-status-sections">
+              <StatusSection statusKey="in_progress" todos={inProgressTodos} rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} />
+              <StatusSection statusKey="pending"     todos={pendingTodos}    rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} />
+              <StatusSection statusKey="completed"   todos={completedTodos}  rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} />
             </div>
           )}
         </main>

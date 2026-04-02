@@ -508,6 +508,69 @@
   text-decoration: underline;
 }
 
+/* ===== STATUS SECTIONS ===== */
+.sv-status-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sv-status-section {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+}
+
+.sv-status-section--in_progress { border-color: rgba(96,165,250,0.35); }
+.sv-status-section--pending     { border-color: rgba(251,191,36,0.35); }
+.sv-status-section--completed   { border-color: rgba(52,211,153,0.2); }
+
+.sv-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.sv-status-section--in_progress .sv-status-header { background: rgba(96,165,250,0.1); }
+.sv-status-section--pending     .sv-status-header { background: rgba(251,191,36,0.08); }
+.sv-status-section--completed   .sv-status-header { background: rgba(52,211,153,0.06); }
+.sv-status-header:hover { filter: brightness(1.15); }
+
+.sv-status-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sv-status-icon { font-size: 16px; line-height: 1; }
+.sv-status-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.sv-status-section--in_progress .sv-status-name { color: #60a5fa; }
+.sv-status-section--pending     .sv-status-name { color: #fbbf24; }
+.sv-status-section--completed   .sv-status-name { color: #34d399; }
+
+.sv-status-count {
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+.sv-status-section--in_progress .sv-status-count { background: rgba(96,165,250,0.2);  color: #93c5fd; }
+.sv-status-section--pending     .sv-status-count { background: rgba(251,191,36,0.2);  color: #fcd34d; }
+.sv-status-section--completed   .sv-status-count { background: rgba(52,211,153,0.15); color: #6ee7b7; }
+
+.sv-status-body {
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.sv-status-body .sv-groups { gap: 12px; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
   .sv-stats { padding: 18px 20px; gap: 16px; }
