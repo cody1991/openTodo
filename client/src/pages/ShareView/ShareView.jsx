@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -319,6 +319,7 @@ export default function ShareView() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const viewTracked = useRef(false);
 
   useEffect(() => {
     axios
@@ -326,6 +327,11 @@ export default function ShareView() {
       .then((res) => {
         setData(res.data);
         setLoading(false);
+        // Only record the view once, even in React StrictMode (which runs effects twice)
+        if (!viewTracked.current) {
+          viewTracked.current = true;
+          axios.post(`/api/public/share/${key}/view`).catch(() => {});
+        }
       })
       .catch((err) => {
         setError(err.response?.data?.message || '加载失败');

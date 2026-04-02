@@ -118,18 +118,13 @@ router.get('/:key', (req, res) => {
     )
     .all(link.user_id, link.user_id);
 
-  // Increment view count
-  db.prepare(
-    `UPDATE share_links SET view_count = view_count + 1, last_viewed_at = datetime('now') WHERE key = ?`
-  ).run(key);
-
   res.json({
     share: {
       key: link.key,
       name: link.name,
       headline: link.headline,
       expires_at: link.expires_at,
-      view_count: link.view_count + 1,
+      view_count: link.view_count,
       created_at: link.created_at,
     },
     owner: {
@@ -141,6 +136,20 @@ router.get('/:key', (req, res) => {
     categories,
     statuses,
   });
+});
+
+// Record a view — called once by the client after the page loads
+router.post('/:key/view', (req, res) => {
+  const { key } = req.params;
+  const link = db.prepare('SELECT id FROM share_links WHERE key = ?').get(key);
+  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+
+  const result = db
+    .prepare(`UPDATE share_links SET view_count = view_count + 1, last_viewed_at = datetime('now') WHERE key = ?`)
+    .run(key);
+
+  const { view_count } = db.prepare('SELECT view_count FROM share_links WHERE key = ?').get(key);
+  res.json({ view_count });
 });
 
 module.exports = router;

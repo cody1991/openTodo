@@ -238,7 +238,7 @@ export default function TodoList() {
     <div className="todo-list-page fade-in">
       <Layout style={{ background: 'transparent', gap: 16 }}>
         {/* Category sidebar */}
-        <Layout.Sider width={220} className="category-sider" style={{ background: 'transparent' }}>
+        <Layout.Sider width={260} className="category-sider" style={{ background: 'transparent' }}>
           <div className="category-panel">
             <div className="category-header">
               <span className="category-header-label">分类</span>
