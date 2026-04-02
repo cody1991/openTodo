@@ -127,19 +127,26 @@
 }
 .cat-nav-item--adding .ant-input { flex: 1; }
 
-/* Action buttons */
+/* Action buttons — hidden and take no space until hover */
 .cat-action-btn {
-  opacity: 0;
   cursor: pointer;
   color: #b0b7c3;
   font-size: 11px;
-  transition: opacity 0.15s, color 0.15s;
   display: flex;
   align-items: center;
   padding: 2px 3px;
   border-radius: 4px;
+  /* collapse when not hovered */
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, width 0.15s;
 }
-.cat-nav-item:hover .cat-action-btn { opacity: 1; }
+.cat-nav-item:hover .cat-action-btn {
+  width: auto;
+  opacity: 1;
+  overflow: visible;
+}
 .cat-action-btn:hover { color: #6366f1; background: #f0f0ff; }
 
 /* ··· more button */
@@ -153,16 +160,28 @@
 }
 
 .cat-drag-handle {
-  opacity: 0;
   cursor: grab;
   color: #c4c9d4;
   font-size: 11px;
-  transition: opacity 0.15s;
   display: flex;
   align-items: center;
+  /* collapse when not hovered */
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.15s, width 0.15s;
 }
-.cat-nav-item:hover .cat-drag-handle { opacity: 1; }
+.cat-nav-item:hover .cat-drag-handle {
+  width: auto;
+  opacity: 1;
+  overflow: visible;
+}
 .cat-drag-handle:active { cursor: grabbing; }
+
+/* count hides on hover to give room to actions */
+.cat-nav-item:hover .cat-count {
+  display: none;
+}
 
 /* ─── Toolbar ──────────────────────────────── */
 .todo-toolbar {
