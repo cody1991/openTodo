@@ -4,7 +4,7 @@ import { Card, Tag, Space, Typography, Button, Dropdown, Badge, Tooltip } from '
 import {
   EditOutlined, DeleteOutlined, CheckOutlined, MoreOutlined,
   ClockCircleOutlined, FireOutlined, ThunderboltOutlined,
-  PlayCircleOutlined, UndoOutlined,
+  PlayCircleOutlined, UndoOutlined, SwapOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Viewer } from '@bytemd/react';
@@ -113,10 +113,32 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
             {priority.icon} {priority.label}
           </Tag>
 
-          <Badge
-            status={status.color}
-            text={<span style={{ fontSize: 11, color: '#9ca3af' }}>{status.label}</span>}
-          />
+          <Dropdown
+            trigger={['click']}
+            placement="bottomLeft"
+            menu={{
+              items: Object.entries(STATUS_CONFIG)
+                .filter(([key]) => key !== todo.status)
+                .map(([key, cfg]) => ({
+                  key,
+                  icon: <Badge status={cfg.color} />,
+                  label: cfg.label,
+                  onClick: ({ domEvent }) => {
+                    domEvent.stopPropagation();
+                    onStatusChange(todo.id, key);
+                  },
+                })),
+            }}
+          >
+            <span
+              style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+              onClick={(e) => e.stopPropagation()}
+              title="点击切换状态"
+            >
+              <Badge status={status.color} text={<span style={{ fontSize: 11, color: '#9ca3af' }}>{status.label}</span>} />
+              <SwapOutlined style={{ fontSize: 9, color: '#c0c4cc' }} />
+            </span>
+          </Dropdown>
 
           {todo.category_name && (
             <Tag
