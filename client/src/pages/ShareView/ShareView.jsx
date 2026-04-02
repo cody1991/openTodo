@@ -371,18 +371,10 @@ export default function ShareView() {
 
   return (
     <div className="sv-root">
-      {/* Animated background */}
-      <div className="sv-bg">
-        <div className="sv-blob sv-blob-1" />
-        <div className="sv-blob sv-blob-2" />
-        <div className="sv-blob sv-blob-3" />
-        <div className="sv-grid-overlay" />
-      </div>
-
       <div className="sv-container">
         {/* Header */}
         <header className="sv-header">
-          <div className="sv-header-inner">
+          <div className="sv-header-top">
             <div className="sv-owner-info">
               <Avatar username={owner.username} avatar={owner.avatar} />
               <div className="sv-owner-text">
@@ -390,6 +382,17 @@ export default function ShareView() {
                 <span className="sv-owner-sub">的 TODO 分享</span>
               </div>
             </div>
+            <div className="sv-meta-row">
+              <span className="sv-meta-item">👁️ {share.view_count}</span>
+              <span className="sv-meta-item">📅 {dayjs(share.created_at).format('MM/DD')} 创建</span>
+              {share.expires_at && (
+                <span className={`sv-meta-item ${dayjs(share.expires_at).isBefore(dayjs().add(3, 'day')) ? 'sv-expiring-soon' : ''}`}>
+                  ⏰ 至 {dayjs(share.expires_at).format('MM/DD')}
+                </span>
+              )}
+            </div>
+          </div>
+          {(share.name && share.name !== '我的分享' || share.headline) && (
             <div className="sv-share-meta">
               {share.name && share.name !== '我的分享' && (
                 <h1 className="sv-share-title">{share.name}</h1>
@@ -397,21 +400,8 @@ export default function ShareView() {
               {share.headline && (
                 <p className="sv-share-headline">{share.headline}</p>
               )}
-              <div className="sv-meta-row">
-                <span className="sv-meta-item">
-                  👁️ {share.view_count} 次浏览
-                </span>
-                <span className="sv-meta-item">
-                  📅 {dayjs(share.created_at).format('YYYY年MM月DD日')} 创建
-                </span>
-                {share.expires_at && (
-                  <span className={`sv-meta-item ${dayjs(share.expires_at).isBefore(dayjs().add(3, 'day')) ? 'sv-expiring-soon' : ''}`}>
-                    ⏰ 有效期至 {dayjs(share.expires_at).format('MM月DD日')}
-                  </span>
-                )}
-              </div>
             </div>
-          </div>
+          )}
         </header>
 
         {/* Stats */}

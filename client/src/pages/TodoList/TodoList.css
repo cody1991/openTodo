@@ -63,28 +63,41 @@
 .cat-nav-item:hover { background: #f0f0ff; color: #6366f1; }
 .cat-nav-item--selected { background: #eeedff !important; color: #6366f1 !important; font-weight: 600 !important; }
 
-.cat-nav-item-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.cat-nav-item-left span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cat-nav-icon { font-size: 14px; flex-shrink: 0; }
+.cat-nav-item-left { display: flex; align-items: center; gap: 7px; min-width: 0; flex: 1; }
+.cat-nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cat-nav-icon { font-size: 12px; flex-shrink: 0; color: #9ca3af; }
 
-.cat-nav-item-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.cat-nav-item-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
-/* Expand toggle (chevron) */
+/* Expand toggle (chevron) — always present for alignment */
 .cat-expand-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 14px;
+  min-width: 14px;
   font-size: 9px;
-  color: #9ca3af;
+  color: #c4c9d4;
   flex-shrink: 0;
   cursor: pointer;
   transition: color 0.15s;
 }
 .cat-expand-toggle:hover { color: #6366f1; }
 
-/* Child category (indented) */
-.cat-nav-item--child { padding-left: 22px; }
+/* Child category — same padding as root (toggle placeholder handles indent) */
+.cat-nav-item--child { padding-left: 18px; }
+
+/* Count pill — unified style */
+.cat-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: #f0f0ff;
+  color: #6366f1;
+  flex-shrink: 0;
+  line-height: 18px;
+}
 
 /* Color swatches */
 .color-swatches { display: flex; flex-wrap: wrap; gap: 7px; padding: 2px 0; }
@@ -112,26 +125,36 @@
 }
 .cat-nav-item--adding .ant-input { flex: 1; }
 
-/* Action buttons (add-sub, drag) */
+/* Action buttons */
 .cat-action-btn {
   opacity: 0;
   cursor: pointer;
-  color: #9ca3af;
+  color: #b0b7c3;
   font-size: 11px;
   transition: opacity 0.15s, color 0.15s;
   display: flex;
   align-items: center;
-  padding: 2px;
-  border-radius: 3px;
+  padding: 2px 3px;
+  border-radius: 4px;
 }
 .cat-nav-item:hover .cat-action-btn { opacity: 1; }
-.cat-action-btn:hover { color: #6366f1; }
+.cat-action-btn:hover { color: #6366f1; background: #f0f0ff; }
+
+/* ··· more button */
+.cat-more-btn {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1;
+  padding: 1px 4px;
+  color: #b0b7c3;
+}
 
 .cat-drag-handle {
   opacity: 0;
   cursor: grab;
-  color: #9ca3af;
-  font-size: 12px;
+  color: #c4c9d4;
+  font-size: 11px;
   transition: opacity 0.15s;
   display: flex;
   align-items: center;

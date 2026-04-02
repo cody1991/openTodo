@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import {
   Layout, Button, Input, Select, Space, Typography, Empty,
-  Spin, message, Tooltip, Row, Col, Badge, Segmented, Modal, Form, Popover,
+  Spin, message, Tooltip, Row, Col, Badge, Segmented, Modal, Form, Popover, Dropdown,
 } from 'antd';
 import {
   PlusOutlined, AppstoreOutlined, UnorderedListOutlined, HolderOutlined,
@@ -145,6 +145,7 @@ export default function TodoList() {
 
   const categories = categoriesData?.categories || [];
   const uncategorizedPendingCount = categoriesData?.uncategorized_pending_count ?? 0;
+  const totalPendingCount = categories.reduce((sum, c) => sum + (c.pending_count || 0), 0) + uncategorizedPendingCount;
   const todos = todosData?.todos || [];
 
   useEffect(() => {
@@ -250,14 +251,13 @@ export default function TodoList() {
                 onClick={() => handleSelectCategory('all')}
               >
                 <div className="cat-nav-item-left">
-                  <UnorderedListOutlined className="cat-nav-icon" />
+                  <span className="cat-expand-toggle" style={{ visibility: 'hidden' }} />
+                  <UnorderedListOutlined className="cat-nav-icon" style={{ fontSize: 12 }} />
                   <span>全部</span>
                 </div>
-                <Badge
-                  count={todos.filter((t) => t.status !== 'completed').length}
-                  showZero={false}
-                  size="small"
-                />
+                {totalPendingCount > 0 && (
+                  <span className="cat-count">{totalPendingCount}</span>
+                )}
               </div>
 
               {/* Root categories (sortable) */}
@@ -350,11 +350,14 @@ export default function TodoList() {
                 onClick={() => handleSelectCategory('uncategorized')}
               >
                 <div className="cat-nav-item-left">
+                  <span className="cat-expand-toggle" style={{ visibility: 'hidden' }} />
                   <span className="cat-dot cat-dot--uncategorized" />
                   <span>未分类</span>
                 </div>
                 {uncategorizedPendingCount > 0 && (
-                  <Badge count={uncategorizedPendingCount} size="small" color="#9ca3af" />
+                  <span className="cat-count" style={{ background: '#f1f5f9', color: '#9ca3af' }}>
+                    {uncategorizedPendingCount}
+                  </span>
                 )}
               </div>
             </nav>
@@ -598,17 +601,21 @@ function KanbanView({ todos, onEdit, onDelete, onStatusChange }) {
   );
 }
 
-// Sortable root category item with expand toggle, add-sub, edit, and drag handle
+// Sortable root category item
 function SortableRootCatItem({ cat, selected, onClick, hasChildren, isExpanded, onToggle, onAddSub, onEdit }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1 };
 
+  const actionMenu = {
+    items: [
+      { key: 'edit', icon: <EditOutlined />, label: '编辑分类', onClick: () => onEdit() },
+      { key: 'add', icon: <PlusOutlined />, label: '新增子分类', onClick: () => onAddSub() },
+    ],
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
-      <div
-        className={`cat-nav-item${selected ? ' cat-nav-item--selected' : ''}`}
-        onClick={onClick}
-      >
+      <div className={`cat-nav-item${selected ? ' cat-nav-item--selected' : ''}`} onClick={onClick}>
         <div className="cat-nav-item-left">
           <span
             className="cat-expand-toggle"
@@ -618,34 +625,20 @@ function SortableRootCatItem({ cat, selected, onClick, hasChildren, isExpanded, 
             {isExpanded ? <DownOutlined /> : <RightOutlined />}
           </span>
           <span className="cat-dot" style={{ background: cat.color }} />
-          <span>{cat.name}</span>
+          <span className="cat-nav-label">{cat.name}</span>
         </div>
         <div className="cat-nav-item-right">
           {cat.pending_count > 0 && (
-            <Badge count={cat.pending_count} size="small" color={cat.color} />
+            <span className="cat-count" style={{ background: `${cat.color}18`, color: cat.color }}>
+              {cat.pending_count}
+            </span>
           )}
-          <Tooltip title="编辑分类">
-            <span
-              className="cat-action-btn"
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            >
-              <EditOutlined />
+          <Dropdown menu={actionMenu} trigger={['click']} placement="bottomRight">
+            <span className="cat-action-btn cat-more-btn" onClick={(e) => e.stopPropagation()}>
+              ···
             </span>
-          </Tooltip>
-          <Tooltip title="新增子分类">
-            <span
-              className="cat-action-btn"
-              onClick={(e) => { e.stopPropagation(); onAddSub(); }}
-            >
-              <PlusOutlined />
-            </span>
-          </Tooltip>
-          <span
-            className="cat-drag-handle"
-            {...attributes}
-            {...listeners}
-            onClick={(e) => e.stopPropagation()}
-          >
+          </Dropdown>
+          <span className="cat-drag-handle" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
             <HolderOutlined />
           </span>
         </div>
@@ -659,34 +652,32 @@ function SortableChildCatItem({ cat, selected, onClick, onEdit }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1 };
 
+  const actionMenu = {
+    items: [
+      { key: 'edit', icon: <EditOutlined />, label: '编辑分类', onClick: () => onEdit() },
+    ],
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
-      <div
-        className={`cat-nav-item cat-nav-item--child${selected ? ' cat-nav-item--selected' : ''}`}
-        onClick={onClick}
-      >
+      <div className={`cat-nav-item cat-nav-item--child${selected ? ' cat-nav-item--selected' : ''}`} onClick={onClick}>
         <div className="cat-nav-item-left">
+          <span className="cat-expand-toggle" style={{ visibility: 'hidden' }} />
           <span className="cat-dot" style={{ background: cat.color }} />
-          <span>{cat.name}</span>
+          <span className="cat-nav-label">{cat.name}</span>
         </div>
         <div className="cat-nav-item-right">
           {cat.pending_count > 0 && (
-            <Badge count={cat.pending_count} size="small" color={cat.color} />
-          )}
-          <Tooltip title="编辑分类">
-            <span
-              className="cat-action-btn"
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            >
-              <EditOutlined />
+            <span className="cat-count" style={{ background: `${cat.color}18`, color: cat.color }}>
+              {cat.pending_count}
             </span>
-          </Tooltip>
-          <span
-            className="cat-drag-handle"
-            {...attributes}
-            {...listeners}
-            onClick={(e) => e.stopPropagation()}
-          >
+          )}
+          <Dropdown menu={actionMenu} trigger={['click']} placement="bottomRight">
+            <span className="cat-action-btn cat-more-btn" onClick={(e) => e.stopPropagation()}>
+              ···
+            </span>
+          </Dropdown>
+          <span className="cat-drag-handle" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
             <HolderOutlined />
           </span>
         </div>
