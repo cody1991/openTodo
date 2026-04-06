@@ -12,6 +12,7 @@ const CalendarPage = lazy(() => import('./pages/Calendar/CalendarPage'));
 const BookmarksPage = lazy(() => import('./pages/Bookmarks/BookmarksPage'));
 const AdminPage = lazy(() => import('./pages/Admin/AdminPage'));
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'));
+const ShareRequestsPage = lazy(() => import('./pages/ShareRequests/ShareRequestsPage'));
 const ShareView = lazy(() => import('./pages/ShareView/ShareView'));
 
 function ProtectedRoute({ children }) {
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/share-requests" element={<ShareRequestsPage />} />
           <Route
             path="/admin"
             element={

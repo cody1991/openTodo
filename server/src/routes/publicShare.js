@@ -1,5 +1,8 @@
 const express = require('express');
 const db = require('../db');
+const { validateCategoryOwnership, validateTagsOwnership } = require('../services/todoService');
+const { rateLimitShareRequest } = require('../middleware/rateLimitShareRequest');
+const { notifyNewShareRequestAsync } = require('../services/shareRequestNotify');
 
 const router = express.Router();
 
@@ -118,6 +121,10 @@ router.get('/:key', (req, res) => {
     )
     .all(link.user_id, link.user_id);
 
+  const tags = db
+    .prepare('SELECT id, name, color FROM tags WHERE user_id = ? ORDER BY name')
+    .all(link.user_id);
+
   res.json({
     share: {
       key: link.key,
@@ -134,7 +141,79 @@ router.get('/:key', (req, res) => {
     },
     todos: todosWithTags,
     categories,
+    tags,
     statuses,
+  });
+});
+
+router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
+  const { key } = req.params;
+  const link = db.prepare('SELECT * FROM share_links WHERE key = ?').get(key);
+  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return res.status(410).json({ message: '该分享链接已过期' });
+  }
+
+  const ownerId = link.user_id;
+  const {
+    title,
+    content = '',
+    priority = 'medium',
+    due_date = null,
+    category_id = null,
+    tag_ids = [],
+    contact = null,
+  } = req.body;
+
+  if (!title || !String(title).trim()) {
+    return res.status(400).json({ message: '请填写标题' });
+  }
+  if (!['low', 'medium', 'high', 'urgent'].includes(priority)) {
+    return res.status(400).json({ message: '无效的优先级' });
+  }
+
+  const ids = Array.isArray(tag_ids)
+    ? tag_ids.map((x) => parseInt(x, 10)).filter((x) => !Number.isNaN(x))
+    : [];
+
+  if (!validateCategoryOwnership(category_id, ownerId)) {
+    return res.status(400).json({ message: '分类无效' });
+  }
+  if (!validateTagsOwnership(ids, ownerId)) {
+    return res.status(400).json({ message: '标签无效' });
+  }
+
+  const contactStr = contact != null ? String(contact).slice(0, 200) : null;
+
+  const result = db
+    .prepare(
+      `INSERT INTO share_requests (share_link_id, title, content, category_id, priority, due_date, tag_ids, contact)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      link.id,
+      String(title).trim(),
+      String(content || ''),
+      category_id || null,
+      priority,
+      due_date || null,
+      JSON.stringify(ids),
+      contactStr
+    );
+
+  notifyNewShareRequestAsync({
+    ownerId,
+    shareLinkName: link.name,
+    title: String(title).trim(),
+    priority,
+    content: String(content || ''),
+    contact: contactStr,
+  });
+
+  res.status(201).json({
+    id: result.lastInsertRowid,
+    message: '已提交',
   });
 });
 

@@ -1,36 +1,31 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space, Button } from 'antd';
 import {
   DashboardOutlined, UnorderedListOutlined, CalendarOutlined,
   SettingOutlined, UserOutlined, LogoutOutlined, BellOutlined,
   TeamOutlined, CheckSquareOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  StarOutlined,
+  StarOutlined, InboxOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '../../stores/authStore';
-import { notificationApi } from '../../services/api';
+import { notificationApi, shareRequestApi } from '../../services/api';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import './AppLayout.css';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
 
-const navItems = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
-  { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO 列表' },
-  { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
-  { key: '/bookmarks', icon: <StarOutlined />, label: '网站收藏' },
-  { key: '/settings', icon: <SettingOutlined />, label: '设置' },
-];
-
-const mobileNavItems = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
-  { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO' },
-  { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
-  { key: '/bookmarks', icon: <StarOutlined />, label: '收藏' },
-  { key: '/settings', icon: <SettingOutlined />, label: '设置' },
-];
+function shareReqNavIcon(count) {
+  if (count > 0) {
+    return (
+      <Badge count={count} size="small" offset={[6, 0]}>
+        <InboxOutlined />
+      </Badge>
+    );
+  }
+  return <InboxOutlined />;
+}
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -44,7 +39,39 @@ export default function AppLayout() {
     refetchInterval: 60000,
   });
 
+  const { data: shareReqData } = useQuery({
+    queryKey: ['share-requests', 'badge'],
+    queryFn: () => shareRequestApi.list({ status: 'pending' }),
+    staleTime: 30000,
+    refetchInterval: 120000,
+  });
+
   const unreadCount = notifData?.unread_count || 0;
+  const pendingShareReqCount = shareReqData?.pending_count || 0;
+
+  const navItems = useMemo(
+    () => [
+      { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
+      { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO 列表' },
+      { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
+      { key: '/bookmarks', icon: <StarOutlined />, label: '网站收藏' },
+      { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: '需求收件箱' },
+      { key: '/settings', icon: <SettingOutlined />, label: '设置' },
+    ],
+    [pendingShareReqCount]
+  );
+
+  const mobileNavItems = useMemo(
+    () => [
+      { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
+      { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO' },
+      { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
+      { key: '/bookmarks', icon: <StarOutlined />, label: '收藏' },
+      { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: '收件箱' },
+      { key: '/settings', icon: <SettingOutlined />, label: '设置' },
+    ],
+    [pendingShareReqCount]
+  );
 
   const userMenuItems = [
     { key: 'who', label: <Text style={{ color: '#94a3b8', fontSize: 12 }}>{user?.email}</Text>, disabled: true },
@@ -55,10 +82,13 @@ export default function AppLayout() {
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true, onClick: async () => { await logout(); navigate('/'); } },
   ];
 
-  const siderItems = [
-    ...navItems,
-    ...(isAdmin() ? [{ key: '/admin', icon: <TeamOutlined />, label: '管理员' }] : []),
-  ];
+  const siderItems = useMemo(() => {
+    const admin = isAdmin();
+    return [
+      ...navItems,
+      ...(admin ? [{ key: '/admin', icon: <TeamOutlined />, label: '管理员' }] : []),
+    ];
+  }, [navItems, user?.role_name]);
 
   return (
     <Layout className="app-layout">

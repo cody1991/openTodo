@@ -270,7 +270,11 @@ export default function SettingsPage() {
                     <span style={{ color: '#94a3b8' }}>企业微信 Webhook</span>
                   </Space>
                 }
-                extra={<Text type="secondary" style={{ fontSize: 12 }}>在企业微信群中添加机器人，复制 Webhook 地址</Text>}
+                extra={
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    在企业微信群中添加机器人，复制 Webhook 地址。保存并开启通知后，日报 / 待办提醒 / 新分享需求会推送到该群（需在服务器配置 PUBLIC_APP_URL 以便消息中带收件箱链接）
+                  </Text>
+                }
               >
                 <Input placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..." />
               </Form.Item>

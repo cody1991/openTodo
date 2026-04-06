@@ -10,6 +10,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 import remarkGfm from 'remark-gfm';
 import './ShareView.css';
+import ShareRequestDrawer from '../../components/ShareRequestDrawer/ShareRequestDrawer';
 
 const STATUS_LABEL = {
   pending: '待处理',
@@ -319,6 +320,7 @@ export default function ShareView() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [requestOpen, setRequestOpen] = useState(false);
   const viewTracked = useRef(false);
 
   useEffect(() => {
@@ -358,7 +360,7 @@ export default function ShareView() {
     );
   }
 
-  const { share, owner, todos, categories } = data;
+  const { share, owner, todos, categories, tags = [] } = data;
   const ownerTz = owner.timezone || 'UTC';
 
   // Build category maps
@@ -410,6 +412,13 @@ export default function ShareView() {
           )}
         </header>
 
+        <div className="sv-cta-wrap">
+          <button type="button" className="sv-cta-btn" onClick={() => setRequestOpen(true)}>
+            提需求
+          </button>
+          <p className="sv-cta-hint">无需登录，提交后由分享主审核，通过后会加入对方的 TODO</p>
+        </div>
+
         {/* Stats */}
         <StatsRow todos={todos} />
 
@@ -440,6 +449,15 @@ export default function ShareView() {
             OpenTodo
           </a>
         </footer>
+
+        <ShareRequestDrawer
+          open={requestOpen}
+          onClose={() => setRequestOpen(false)}
+          shareKey={key}
+          categories={categories}
+          tags={tags}
+          ownerTimezone={ownerTz}
+        />
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ const bookmarkCategoryRoutes = require('./routes/bookmarkCategories');
 const bookmarkRoutes = require('./routes/bookmarks');
 const shareRoutes = require('./routes/share');
 const publicShareRoutes = require('./routes/publicShare');
+const shareRequestsRoutes = require('./routes/shareRequests');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +52,7 @@ app.use('/api/bookmark-categories', bookmarkCategoryRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/share', shareRoutes);
 app.use('/api/public/share', publicShareRoutes);
+app.use('/api/share-requests', shareRequestsRoutes);
 
 // Serve locally uploaded images
 const uploadsDir = require('path').join(__dirname, '../../data/uploads');

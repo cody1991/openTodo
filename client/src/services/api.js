@@ -112,4 +112,10 @@ export const shareApi = {
   getPublic: (key) => api.get(`/public/share/${key}`),
 };
 
+export const shareRequestApi = {
+  list: (params) => api.get('/share-requests', { params }),
+  approve: (id, data) => api.post(`/share-requests/${id}/approve`, data),
+  reject: (id) => api.post(`/share-requests/${id}/reject`),
+};
+
 export default api;

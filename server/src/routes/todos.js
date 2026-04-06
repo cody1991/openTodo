@@ -1,22 +1,15 @@
 const express = require('express');
 const db = require('../db');
 const { authenticate } = require('../middleware/auth');
+const {
+  getTodoWithTags,
+  validateCategoryOwnership,
+  validateTagsOwnership,
+  createTodoForUser,
+} = require('../services/todoService');
 
 const router = express.Router();
 router.use(authenticate);
-
-function getTodoWithTags(id) {
-  const todo = db.prepare('SELECT * FROM todos WHERE id = ?').get(id);
-  if (!todo) return null;
-  const tags = db
-    .prepare(
-      `SELECT t.* FROM tags t
-       JOIN todo_tags tt ON tt.tag_id = t.id
-       WHERE tt.todo_id = ?`
-    )
-    .all(id);
-  return { ...todo, tags };
-}
 
 router.get('/', (req, res) => {
   const {
@@ -139,49 +132,26 @@ router.get('/:id', (req, res) => {
   res.json({ todo: { ...todo, tags } });
 });
 
-function validateCategoryOwnership(categoryId, userId) {
-  if (!categoryId) return true;
-  const cat = db.prepare('SELECT id FROM categories WHERE id = ? AND user_id = ?').get(categoryId, userId);
-  return !!cat;
-}
-
-function validateTagsOwnership(tagIds, userId) {
-  if (!tagIds || tagIds.length === 0) return true;
-  const placeholders = tagIds.map(() => '?').join(',');
-  const owned = db
-    .prepare(`SELECT id FROM tags WHERE id IN (${placeholders}) AND user_id = ?`)
-    .all(...tagIds, userId);
-  return owned.length === tagIds.length;
-}
-
 router.post('/', (req, res) => {
   const { title, content = '', category_id, priority = 'medium', due_date, tag_ids = [], notify_enabled = 1 } =
     req.body;
   if (!title) return res.status(400).json({ message: 'title required' });
 
-  if (!validateCategoryOwnership(category_id, req.user.id)) {
-    return res.status(400).json({ message: '分类不存在或无权使用' });
+  try {
+    const todo = createTodoForUser(req.user.id, {
+      title,
+      content,
+      category_id,
+      priority,
+      due_date,
+      tag_ids,
+      notify_enabled,
+    });
+    res.status(201).json({ todo });
+  } catch (e) {
+    if (e.statusCode) return res.status(e.statusCode).json({ message: e.message });
+    throw e;
   }
-  if (!validateTagsOwnership(tag_ids, req.user.id)) {
-    return res.status(400).json({ message: '标签不存在或无权使用' });
-  }
-
-  const result = db
-    .prepare(
-      `INSERT INTO todos (title, content, category_id, user_id, priority, due_date, notify_enabled)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(title, content, category_id || null, req.user.id, priority, due_date || null, notify_enabled ? 1 : 0);
-
-  const todoId = result.lastInsertRowid;
-
-  if (tag_ids.length > 0) {
-    const insertTag = db.prepare('INSERT OR IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)');
-    tag_ids.forEach((tid) => insertTag.run(todoId, tid));
-  }
-
-  const todo = getTodoWithTags(todoId);
-  res.status(201).json({ todo });
 });
 
 router.put('/:id', (req, res) => {
