@@ -118,6 +118,125 @@ router.get('/', (req, res) => {
   res.json({ todos: result, total, page: parseInt(page), limit: parseInt(limit) });
 });
 
+router.get('/export', (req, res) => {
+  const categories = db.prepare('SELECT * FROM categories WHERE user_id = ?').all(req.user.id);
+  const tags = db.prepare('SELECT * FROM tags WHERE user_id = ?').all(req.user.id);
+  const todos = db.prepare('SELECT * FROM todos WHERE user_id = ?').all(req.user.id);
+
+  const todoIds = todos.map((t) => t.id);
+  let todoTags = [];
+  if (todoIds.length > 0) {
+    const placeholders = todoIds.map(() => '?').join(',');
+    todoTags = db.prepare(`SELECT * FROM todo_tags WHERE todo_id IN (${placeholders})`).all(todoIds);
+  }
+
+  res.json({
+    version: 1,
+    exported_at: new Date().toISOString(),
+    categories,
+    tags,
+    todos,
+    todo_tags: todoTags,
+  });
+});
+
+router.post('/import', (req, res) => {
+  const { categories = [], tags = [], todos = [], todo_tags = [] } = req.body;
+
+  if (!Array.isArray(todos) || !Array.isArray(categories) || !Array.isArray(tags)) {
+    return res.status(400).json({ message: '数据格式错误' });
+  }
+
+  const importFn = db.transaction(() => {
+    const existingTodos = db.prepare('SELECT id FROM todos WHERE user_id = ?').all(req.user.id);
+    const existingTodoIds = existingTodos.map((t) => t.id);
+    if (existingTodoIds.length > 0) {
+      const placeholders = existingTodoIds.map(() => '?').join(',');
+      db.prepare(`DELETE FROM todo_tags WHERE todo_id IN (${placeholders})`).run(existingTodoIds);
+    }
+    db.prepare('DELETE FROM todos WHERE user_id = ?').run(req.user.id);
+    db.prepare('DELETE FROM categories WHERE user_id = ?').run(req.user.id);
+    db.prepare('DELETE FROM tags WHERE user_id = ?').run(req.user.id);
+
+    const categoryIdMap = {};
+    const insertCategory = db.prepare(
+      'INSERT INTO categories (name, color, icon, parent_id, sort_order, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    for (const cat of categories.filter((c) => !c.parent_id)) {
+      const r = insertCategory.run(
+        cat.name, cat.color || '#1677ff', cat.icon || 'folder', null,
+        cat.sort_order || 0, req.user.id,
+        cat.created_at || new Date().toISOString(),
+        cat.updated_at || new Date().toISOString()
+      );
+      categoryIdMap[cat.id] = r.lastInsertRowid;
+    }
+    for (const cat of categories.filter((c) => c.parent_id)) {
+      const r = insertCategory.run(
+        cat.name, cat.color || '#1677ff', cat.icon || 'folder',
+        categoryIdMap[cat.parent_id] || null,
+        cat.sort_order || 0, req.user.id,
+        cat.created_at || new Date().toISOString(),
+        cat.updated_at || new Date().toISOString()
+      );
+      categoryIdMap[cat.id] = r.lastInsertRowid;
+    }
+
+    const tagIdMap = {};
+    const insertTag = db.prepare(
+      'INSERT INTO tags (name, color, user_id, created_at) VALUES (?, ?, ?, ?)'
+    );
+    for (const tag of tags) {
+      const r = insertTag.run(
+        tag.name, tag.color || '#1677ff', req.user.id,
+        tag.created_at || new Date().toISOString()
+      );
+      tagIdMap[tag.id] = r.lastInsertRowid;
+    }
+
+    const todoIdMap = {};
+    const insertTodo = db.prepare(
+      `INSERT INTO todos (title, content, category_id, user_id, status, priority, due_date, completed_at, is_overdue, sort_order, notify_enabled, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    for (const todo of todos) {
+      const r = insertTodo.run(
+        todo.title, todo.content || '',
+        todo.category_id ? (categoryIdMap[todo.category_id] || null) : null,
+        req.user.id,
+        todo.status || 'pending', todo.priority || 'medium',
+        todo.due_date || null, todo.completed_at || null,
+        todo.is_overdue || 0, todo.sort_order || 0,
+        todo.notify_enabled !== undefined ? todo.notify_enabled : 1,
+        todo.created_at || new Date().toISOString(),
+        todo.updated_at || new Date().toISOString()
+      );
+      todoIdMap[todo.id] = r.lastInsertRowid;
+    }
+
+    const insertTodoTag = db.prepare('INSERT OR IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)');
+    for (const tt of todo_tags) {
+      const newTodoId = todoIdMap[tt.todo_id];
+      const newTagId = tagIdMap[tt.tag_id];
+      if (newTodoId && newTagId) insertTodoTag.run(newTodoId, newTagId);
+    }
+
+    return {
+      categories: Object.keys(categoryIdMap).length,
+      tags: Object.keys(tagIdMap).length,
+      todos: Object.keys(todoIdMap).length,
+    };
+  });
+
+  try {
+    const result = importFn();
+    res.json({ message: '导入成功', ...result });
+  } catch (e) {
+    console.error('Import error:', e);
+    res.status(500).json({ message: '导入失败: ' + e.message });
+  }
+});
+
 router.get('/:id', (req, res) => {
   const todo = db
     .prepare('SELECT * FROM todos WHERE id = ? AND user_id = ?')

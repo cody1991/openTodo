@@ -39,6 +39,8 @@ export const todoApi = {
   update: (id, data) => api.put(`/todos/${id}`, data),
   updateStatus: (id, status) => api.patch(`/todos/${id}/status`, { status }),
   delete: (id) => api.delete(`/todos/${id}`),
+  exportData: () => api.get('/todos/export'),
+  importData: (data) => api.post('/todos/import', data),
 };
 
 export const categoryApi = {

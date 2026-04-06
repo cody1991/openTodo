@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import {
   Layout, Button, Input, Select, Space, Typography, Empty,
   Spin, message, Tooltip, Row, Col, Badge, Segmented, Modal, Form, Popover, Dropdown,
@@ -6,7 +6,7 @@ import {
 import {
   PlusOutlined, AppstoreOutlined, UnorderedListOutlined, HolderOutlined,
   RightOutlined, DownOutlined, EditOutlined, ShareAltOutlined, UnorderedListOutlined as ListIcon,
-  SettingOutlined,
+  SettingOutlined, ExportOutlined, ImportOutlined, ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,6 +16,7 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import dayjs from 'dayjs';
 import { todoApi, categoryApi } from '../../services/api';
 import TodoCard from '../../components/TodoCard/TodoCard';
 import TodoEditor from '../../components/TodoEditor/TodoEditor';
@@ -78,9 +79,70 @@ export default function TodoList() {
   const [editingCat, setEditingCat] = useState(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLinksModalOpen, setShareLinksModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
   const queryClient = useQueryClient();
+  const importInputRef = useRef(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleExport = async () => {
+    setExportLoading(true);
+    try {
+      const data = await todoApi.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `todos-export-${dayjs().format('YYYY-MM-DD')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      message.success(`导出成功，共 ${data.todos?.length || 0} 条待办`);
+    } catch (e) {
+      message.error(e.message || '导出失败');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.todos || !Array.isArray(data.todos)) {
+          message.error('文件格式不正确，请选择有效的导出文件');
+          return;
+        }
+        Modal.confirm({
+          title: '确认全量导入',
+          icon: <ExclamationCircleOutlined />,
+          content: `此操作将清空当前所有待办、分类和标签，并导入文件中的数据（${data.todos.length} 条待办、${data.categories?.length || 0} 个分类、${data.tags?.length || 0} 个标签）。此操作不可撤销，确认继续？`,
+          okText: '确认导入',
+          okButtonProps: { danger: true },
+          cancelText: '取消',
+          onOk: async () => {
+            setImportLoading(true);
+            try {
+              const res = await todoApi.importData(data);
+              message.success(res.message || '导入成功');
+              queryClient.invalidateQueries();
+            } catch (err) {
+              message.error(err.message || '导入失败');
+            } finally {
+              setImportLoading(false);
+            }
+          },
+        });
+      } catch {
+        message.error('文件解析失败，请选择有效的 JSON 文件');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -412,6 +474,36 @@ export default function TodoList() {
                   { value: 'list', icon: <UnorderedListOutlined /> },
                   { value: 'kanban', icon: <AppstoreOutlined /> },
                 ]}
+              />
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'export',
+                      icon: <ExportOutlined />,
+                      label: '导出数据',
+                      onClick: handleExport,
+                      disabled: exportLoading,
+                    },
+                    {
+                      key: 'import',
+                      icon: <ImportOutlined />,
+                      label: '导入数据',
+                      onClick: () => importInputRef.current?.click(),
+                      disabled: importLoading,
+                    },
+                  ],
+                }}
+                trigger={['click']}
+              >
+                <Button loading={exportLoading || importLoading}>更多操作</Button>
+              </Dropdown>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".json,application/json"
+                style={{ display: 'none' }}
+                onChange={handleImportFile}
               />
               <Button
                 icon={<ShareAltOutlined />}
