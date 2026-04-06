@@ -10,7 +10,10 @@ api.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const url = err.config?.url || '';
-    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
+    const isAuthEndpoint =
+      url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/me');
     const isPublicEndpoint = url.includes('/public/share/');
     const isSharePage = window.location.pathname.startsWith('/share/');
     if (err.response?.status === 401 && !isAuthEndpoint && !isPublicEndpoint && !isSharePage) {
