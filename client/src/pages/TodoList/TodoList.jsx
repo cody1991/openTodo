@@ -46,6 +46,10 @@ const PRESET_COLORS = [
   '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b',
 ];
 
+function randomCategoryColor() {
+  return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
+}
+
 function ColorSwatches({ value, onChange }) {
   return (
     <div className="color-swatches">
@@ -216,7 +220,7 @@ export default function TodoList() {
       addSubCatMutation.mutate({
         name: newSubCatName.trim(),
         parentId: parentCat.id,
-        color: parentCat.color,
+        color: randomCategoryColor(),
       });
     }
   };
@@ -763,7 +767,7 @@ function CategoryEditModal({ cat, allCategories, open, onClose, onSave, saving }
 function AddCategoryButton({ onAdd }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-  const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [color, setColor] = useState(() => randomCategoryColor());
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -772,7 +776,7 @@ function AddCategoryButton({ onAdd }) {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setOpen(false);
       setName('');
-      setColor(PRESET_COLORS[0]);
+      setColor(randomCategoryColor());
       onAdd?.();
     },
     onError: () => message.error('创建失败'),
@@ -782,9 +786,14 @@ function AddCategoryButton({ onAdd }) {
     if (name.trim()) mutation.mutate({ name: name.trim(), color });
   };
 
+  const handleOpenChange = (v) => {
+    if (v) setColor(randomCategoryColor());
+    else setName('');
+    setOpen(v);
+  };
+
   const content = (
-    <div style={{ width: 196 }}>
-      <ColorSwatches value={color} onChange={setColor} />
+    <div style={{ width: 172 }}>
       <Input
         size="small"
         placeholder="分类名称"
@@ -792,7 +801,6 @@ function AddCategoryButton({ onAdd }) {
         onChange={(e) => setName(e.target.value)}
         onPressEnter={handleCreate}
         autoFocus
-        style={{ marginTop: 8 }}
         prefix={<span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />}
       />
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 8 }}>
@@ -807,7 +815,7 @@ function AddCategoryButton({ onAdd }) {
       content={content}
       trigger="click"
       open={open}
-      onOpenChange={(v) => { setOpen(v); if (!v) setName(''); }}
+      onOpenChange={handleOpenChange}
       placement="bottomRight"
     >
       <Tooltip title="新建分类">
