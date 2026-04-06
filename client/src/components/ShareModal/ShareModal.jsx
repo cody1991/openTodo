@@ -164,18 +164,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
     },
   ];
 
-  const filteredTodos = useMemo(() => {
-    return todos.filter((t) => {
-      if (selectedCategoryIds !== null) {
-        const includesUncategorized = selectedCategoryIds.includes(-1);
-        const catMatch = selectedCategoryIds.includes(t.category_id);
-        const uncatMatch = includesUncategorized && t.category_id == null;
-        if (!catMatch && !uncatMatch) return false;
-      }
-      if (!selectedStatuses.includes(t.status)) return false;
-      return true;
-    });
-  }, [todos, selectedCategoryIds, selectedStatuses]);
+  const filteredTodos = useMemo(() => todos, [todos]);
 
   const handleCategoryCheck = (checkedKeys) => {
     const ids = checkedKeys
