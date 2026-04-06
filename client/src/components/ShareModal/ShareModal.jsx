@@ -101,6 +101,8 @@ export default function ShareModal({ open, onClose, editLink = null }) {
   const { data: todosData } = useQuery({
     queryKey: ['todos', { limit: 200 }],
     queryFn: () => todoApi.list({ limit: 200 }),
+    enabled: open,
+    staleTime: 0,
   });
 
   const categories = categoriesData?.categories || [];
