@@ -488,7 +488,9 @@
     "dateUpdated": "Bijgewerkt op",
     "dateCompleted": "Voltooid op",
     "dateDue": "Vervaldatum",
-    "defaultName": "Mijn Share"
+    "defaultName": "Mijn Share",
+    "showContent": "Details delen",
+    "showContentDesc": "Als ingeschakeld kunnen bezoekers elke TODO uitvouwen om de volledige inhoud te lezen"
   },
   "shareView": {
     "todoShare": "'s TODO-share",
@@ -531,6 +533,8 @@
       "pending": "In afwachting",
       "completed": "Voltooid"
     },
+    "contentHidden": "📄 Details zijn verborgen in deze share",
+    "contentHiddenDesc": "De eigenaar heeft ervoor gekozen de volledige inhoud van elke TODO niet te tonen.",
     "footerCta": "Wil je je eigen TODO's beheren?",
     "footerTryLink": "Probeer OpenTodo gratis ↗"
   },

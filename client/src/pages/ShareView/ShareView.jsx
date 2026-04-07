@@ -64,10 +64,10 @@ function PriorityDot({ priority }) {
   );
 }
 
-function TodoCard({ todo, ownerTz = 'UTC' }) {
+function TodoCard({ todo, ownerTz = 'UTC', showContent = true }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
-  const hasContent = todo.content && todo.content.trim();
+  const hasContent = showContent && todo.content && todo.content.trim();
   const dueDayjs = todo.due_date ? dayjs.utc(todo.due_date).tz(ownerTz) : null;
   const nowInOwnerTz = dayjs().tz(ownerTz);
   return (
@@ -124,7 +124,7 @@ function CatDot({ color }) {
   );
 }
 
-function SubCategorySection({ sub, todos, ownerTz }) {
+function SubCategorySection({ sub, todos, ownerTz, showContent }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
     <div className="sv-sub-section">
@@ -139,14 +139,14 @@ function SubCategorySection({ sub, todos, ownerTz }) {
       </div>
       {!collapsed && (
         <div className="sv-todo-list sv-todo-list--sub">
-          {todos.map((todo) => <TodoCard key={todo.id} todo={todo} ownerTz={ownerTz} />)}
+          {todos.map((todo) => <TodoCard key={todo.id} todo={todo} ownerTz={ownerTz} showContent={showContent} />)}
         </div>
       )}
     </div>
   );
 }
 
-function ParentCategorySection({ parent, directTodos, subSections, ownerTz }) {
+function ParentCategorySection({ parent, directTodos, subSections, ownerTz, showContent }) {
   const [collapsed, setCollapsed] = useState(false);
   const total = directTodos.length + subSections.reduce((s, sec) => s + sec.todos.length, 0);
 
@@ -164,11 +164,11 @@ function ParentCategorySection({ parent, directTodos, subSections, ownerTz }) {
         <div className="sv-parent-body">
           {directTodos.length > 0 && (
             <div className="sv-todo-list">
-              {directTodos.map((todo) => <TodoCard key={todo.id} todo={todo} ownerTz={ownerTz} />)}
+              {directTodos.map((todo) => <TodoCard key={todo.id} todo={todo} ownerTz={ownerTz} showContent={showContent} />)}
             </div>
           )}
           {subSections.map(({ sub, todos }) => (
-            <SubCategorySection key={sub.id} sub={sub} todos={todos} ownerTz={ownerTz} />
+            <SubCategorySection key={sub.id} sub={sub} todos={todos} ownerTz={ownerTz} showContent={showContent} />
           ))}
         </div>
       )}
@@ -200,7 +200,7 @@ function buildCategorySections(filteredTodos, rootCats, subsByParent) {
   return { parentSections, uncategorized };
 }
 
-function StatusSection({ statusKey, todos, rootCats, subsByParent, ownerTz }) {
+function StatusSection({ statusKey, todos, rootCats, subsByParent, ownerTz, showContent }) {
   const { t } = useTranslation();
   const STATUS_SECTION_CONFIG = {
     in_progress: { label: t('shareView.statusSections.in_progress'), icon: '🔵', defaultCollapsed: false },
@@ -233,6 +233,7 @@ function StatusSection({ statusKey, todos, rootCats, subsByParent, ownerTz }) {
                 directTodos={directTodos}
                 subSections={subSections}
                 ownerTz={ownerTz}
+                showContent={showContent}
               />
             ))}
             {uncategorized.length > 0 && (
@@ -241,6 +242,7 @@ function StatusSection({ statusKey, todos, rootCats, subsByParent, ownerTz }) {
                 directTodos={uncategorized}
                 subSections={[]}
                 ownerTz={ownerTz}
+                showContent={showContent}
               />
             )}
           </div>
@@ -358,6 +360,7 @@ export default function ShareView() {
 
   const { share, owner, todos, categories, tags = [] } = data;
   const ownerTz = owner.timezone || 'UTC';
+  const showContent = share.show_content !== false;
 
   const rootCats = categories.filter((c) => !c.parent_id);
   const subsByParent = {};
@@ -430,6 +433,16 @@ export default function ShareView() {
 
         <StatsRow todos={todos} />
 
+        {!showContent && (
+          <div className="sv-content-hidden-banner">
+            <span className="sv-content-hidden-icon">📄</span>
+            <div>
+              <div className="sv-content-hidden-title">{t('shareView.contentHidden')}</div>
+              <div className="sv-content-hidden-desc">{t('shareView.contentHiddenDesc')}</div>
+            </div>
+          </div>
+        )}
+
         <main className="sv-main">
           {!hasContent ? (
             <div className="sv-empty">
@@ -438,9 +451,9 @@ export default function ShareView() {
             </div>
           ) : (
             <div className="sv-status-sections">
-              <StatusSection statusKey="in_progress" todos={inProgressTodos} rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} />
-              <StatusSection statusKey="pending"     todos={pendingTodos}    rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} />
-              <StatusSection statusKey="completed"   todos={completedTodos}  rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} />
+              <StatusSection statusKey="in_progress" todos={inProgressTodos} rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} showContent={showContent} />
+              <StatusSection statusKey="pending"     todos={pendingTodos}    rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} showContent={showContent} />
+              <StatusSection statusKey="completed"   todos={completedTodos}  rootCats={rootCats} subsByParent={subsByParent} ownerTz={ownerTz} showContent={showContent} />
             </div>
           )}
         </main>

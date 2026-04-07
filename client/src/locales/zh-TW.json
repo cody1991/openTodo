@@ -488,7 +488,9 @@
     "dateUpdated": "更新時間",
     "dateCompleted": "完成時間",
     "dateDue": "截止時間",
-    "defaultName": "我的分享"
+    "defaultName": "我的分享",
+    "showContent": "分享詳情",
+    "showContentDesc": "開啟後，訪客可展開查看每項 TODO 的正文內容"
   },
   "shareView": {
     "todoShare": "的 TODO 分享",
@@ -531,6 +533,8 @@
       "pending": "待處理",
       "completed": "已完成"
     },
+    "contentHidden": "📄 該分享已隱藏正文內容",
+    "contentHiddenDesc": "分享主選擇不對外公開每項 TODO 的詳情。",
     "footerCta": "想要管理自己的 TODO？",
     "footerTryLink": "免費試用 OpenTodo ↗"
   },

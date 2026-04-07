@@ -488,7 +488,9 @@
     "dateUpdated": "Updated At",
     "dateCompleted": "Completed At",
     "dateDue": "Due Date",
-    "defaultName": "My Share"
+    "defaultName": "My Share",
+    "showContent": "Share Details",
+    "showContentDesc": "When enabled, visitors can expand each TODO to read its full content"
   },
   "shareView": {
     "todoShare": "'s TODO Share",
@@ -531,6 +533,8 @@
       "pending": "Pending",
       "completed": "Completed"
     },
+    "contentHidden": "📄 Details are hidden in this share",
+    "contentHiddenDesc": "The owner has chosen not to expose the full content of each TODO.",
     "footerCta": "Want to manage your own TODOs?",
     "footerTryLink": "Try OpenTodo for free ↗"
   },

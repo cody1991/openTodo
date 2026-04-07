@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   Modal, Steps, Button, Input, Checkbox, Select, DatePicker,
   Tag, Space, Typography, Divider, message, Tooltip, Radio,
-  Tree, Badge, Empty,
+  Tree, Badge, Empty, Switch,
 } from 'antd';
 import {
   ShareAltOutlined, EyeOutlined, CopyOutlined, CheckOutlined,
@@ -56,6 +56,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
   );
   const [expiresIn, setExpiresIn] = useState(isEditMode ? KEEP_EXPIRES : 'never');
   const [theme, setTheme] = useState(editLink?.theme ?? 'light');
+  const [showContent, setShowContent] = useState(editLink?.show_content !== undefined ? !!editLink.show_content : true);
 
   const STATUS_OPTIONS = [
     { label: t('share.statusPending'),    value: 'pending',     color: '#faad14' },
@@ -190,6 +191,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
       date_end: dateRange ? dateRange[1].format('YYYY-MM-DD') : null,
       ...(expiresIn !== KEEP_EXPIRES && { expires_in: expiresIn }),
       theme,
+      show_content: showContent,
     };
     if (isEditMode) {
       updateMutation.mutate({ id: editLink.id, data: payload });
@@ -218,6 +220,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
     setDateRange(null);
     setExpiresIn('never');
     setTheme('light');
+    setShowContent(true);
   };
 
   const handleClose = () => {
@@ -282,6 +285,19 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                     </div>
                   ))}
                 </div>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 16px', borderRadius: 10,
+                background: showContent ? 'rgba(99,102,241,0.04)' : '#f8fafc',
+                border: `1px solid ${showContent ? 'rgba(99,102,241,0.2)' : '#e2e8f0'}`,
+                transition: 'all 0.2s',
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>{t('share.showContent')}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{t('share.showContentDesc')}</div>
+                </div>
+                <Switch checked={showContent} onChange={setShowContent} />
               </div>
             </div>
           </div>

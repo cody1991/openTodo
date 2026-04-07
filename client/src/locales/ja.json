@@ -488,7 +488,9 @@
     "dateUpdated": "更新日時",
     "dateCompleted": "完了日時",
     "dateDue": "期限",
-    "defaultName": "マイシェア"
+    "defaultName": "マイシェア",
+    "showContent": "詳細を共有",
+    "showContentDesc": "有効にすると、訪問者が各 TODO を展開して本文を読めるようになります"
   },
   "shareView": {
     "todoShare": "のTODO共有",
@@ -531,6 +533,8 @@
       "pending": "未対応",
       "completed": "完了"
     },
+    "contentHidden": "📄 この共有では本文が非表示です",
+    "contentHiddenDesc": "オーナーは各 TODO の詳細を公開しないよう設定しています。",
     "footerCta": "自分の TODO を管理したいですか？",
     "footerTryLink": "OpenTodo を無料で試す ↗"
   },

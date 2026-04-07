@@ -107,7 +107,12 @@ router.get('/:key', (req, res) => {
       tagMap[todo_id].push(tag);
     });
   }
-  const todosWithTags = todos.map((todo) => ({ ...todo, tags: tagMap[todo.id] || [] }));
+  const showContent = link.show_content !== 0;
+  const todosWithTags = todos.map((todo) => ({
+    ...todo,
+    content: showContent ? todo.content : null,
+    tags: tagMap[todo.id] || [],
+  }));
 
   // Get categories summary for sidebar
   const categories = db
@@ -134,6 +139,7 @@ router.get('/:key', (req, res) => {
       view_count: link.view_count,
       created_at: link.created_at,
       theme: link.theme || 'light',
+      show_content: showContent,
     },
     owner: {
       username: owner.username,

@@ -609,6 +609,23 @@
 }
 .sv-footer-link:hover { color: #4f46e5; }
 
+/* ===== CONTENT HIDDEN BANNER ===== */
+.sv-content-hidden-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #94a3b8;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.sv-content-hidden-icon { font-size: 18px; line-height: 1.4; flex-shrink: 0; }
+.sv-content-hidden-title { font-weight: 600; color: #475569; margin-bottom: 2px; }
+.sv-content-hidden-desc { color: #94a3b8; font-size: 12px; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
   .sv-container { padding: 0 12px 48px; }

@@ -1,0 +1,1 @@
+ALTER TABLE share_links ADD COLUMN show_content INTEGER NOT NULL DEFAULT 1;
