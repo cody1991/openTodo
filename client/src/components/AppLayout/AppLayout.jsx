@@ -10,6 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../stores/authStore';
+import LangSelect from '../LangSelect/LangSelect';
 import { notificationApi, shareRequestApi } from '../../services/api';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import './AppLayout.css';
@@ -128,11 +129,14 @@ export default function AppLayout() {
 
       <Layout className="main-layout" style={{ marginLeft: collapsed ? 60 : 220 }}>
         <Header className="app-header">
-          <div className="mobile-logo">
-            <div className="logo-icon-wrap" style={{ width: 28, height: 28, fontSize: 13 }}>
-              <CheckSquareOutlined />
+          <div className="header-left">
+            <div className="mobile-logo">
+              <div className="logo-icon-wrap" style={{ width: 28, height: 28, fontSize: 13 }}>
+                <CheckSquareOutlined />
+              </div>
+              <span className="gradient-text" style={{ fontSize: 15, fontWeight: 800 }}>OpenTodo</span>
             </div>
-            <span className="gradient-text" style={{ fontSize: 15, fontWeight: 800 }}>OpenTodo</span>
+            <LangSelect />
           </div>
 
           <Space className="header-right">

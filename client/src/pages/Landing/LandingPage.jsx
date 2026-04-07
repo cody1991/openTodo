@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../stores/authStore';
-import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
+import LangSelect from '../../components/LangSelect/LangSelect';
 import './LandingPage.css';
 
 const FEATURE_KEYS = [
@@ -64,18 +64,7 @@ export default function LandingPage() {
           </div>
 
           <div className="landing-nav-right">
-            {/* Language switcher */}
-            <div className="landing-lang-switcher">
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <button
-                  key={lang.value}
-                  className={`landing-lang-btn${i18n.language === lang.value ? ' active' : ''}`}
-                  onClick={() => i18n.changeLanguage(lang.value)}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
+            <LangSelect />
 
             <Space size={12}>
               {user ? (

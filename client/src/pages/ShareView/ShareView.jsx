@@ -10,8 +10,8 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
-import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
 import './ShareView.css';
+import LangSelect from '../../components/LangSelect/LangSelect';
 import ShareRequestDrawer from '../../components/ShareRequestDrawer/ShareRequestDrawer';
 
 function Avatar({ username, avatar }) {
@@ -384,27 +384,19 @@ export default function ShareView() {
               </div>
             </div>
             <div className="sv-header-right">
-              <div className="sv-lang-switcher">
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.value}
-                    className={`sv-lang-btn${i18n.language === lang.value ? ' sv-lang-btn--active' : ''}`}
-                    onClick={() => i18n.changeLanguage(lang.value)}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
-              <div className="sv-theme-switcher">
-                {THEME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    className={`sv-theme-btn${theme === opt.value ? ' sv-theme-btn--active' : ''}`}
-                    onClick={() => setTheme(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              <div className="sv-controls-row">
+                <LangSelect />
+                <div className="sv-theme-switcher">
+                  {THEME_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      className={`sv-theme-btn${theme === opt.value ? ' sv-theme-btn--active' : ''}`}
+                      onClick={() => setTheme(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="sv-meta-row">
                 <span className="sv-meta-item">👁️ {share.view_count}</span>

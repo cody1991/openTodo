@@ -10,6 +10,7 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   position: sticky;
   top: 24px;
+  min-height: calc(100vh - 54px - 48px); /* viewport - header - top/bottom padding */
 }
 
 .category-header {

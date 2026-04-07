@@ -79,33 +79,21 @@
 
 .sv-theme-btn:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
 
-/* ===== LANGUAGE SWITCHER ===== */
-.sv-lang-switcher {
+/* ===== CONTROLS ROW (lang + theme in one line) ===== */
+.sv-controls-row {
   display: flex;
-  gap: 2px;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(226,232,240,0.8);
-  border-radius: 20px;
-  padding: 3px;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.sv-lang-btn {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 9px;
-  border-radius: 14px;
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
+/* lang-select in share view gets glass backdrop to match theme switcher */
+.sv-controls-row .lang-select {
+  background-color: rgba(255,255,255,0.6);
+  backdrop-filter: blur(8px);
+  border-color: rgba(226,232,240,0.8);
 }
-
-.sv-lang-btn:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
-.sv-lang-btn--active { background: #6366f1 !important; color: #fff !important; }
 .sv-theme-btn--active { background: #6366f1; color: #fff; }
 .sv-theme-btn--active:hover { background: #4f46e5; color: #fff; }
 
@@ -634,8 +622,7 @@
   .sv-status-body { padding: 8px; }
   .sv-theme-switcher { flex-wrap: wrap; }
   .sv-theme-btn { font-size: 11px; padding: 3px 8px; }
-  .sv-lang-switcher { flex-wrap: wrap; }
-  .sv-lang-btn { font-size: 10px; padding: 3px 7px; }
+  .sv-controls-row { gap: 6px; }
   .sv-footer-cta { flex-direction: column; gap: 6px; padding: 10px 16px; }
 }
 
@@ -727,9 +714,11 @@
 .sv-theme-dark .sv-footer-cta { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.2); }
 .sv-theme-dark .sv-footer-cta-text { color: #94a3b8; }
 .sv-theme-dark .sv-footer-cta-link { color: #818cf8; }
-.sv-theme-dark .sv-lang-switcher { background: rgba(30,41,59,0.6); border-color: rgba(99,102,241,0.2); }
-.sv-theme-dark .sv-lang-btn { color: #64748b; }
-.sv-theme-dark .sv-lang-btn:hover { background: rgba(99,102,241,0.15); color: #818cf8; }
+.sv-theme-dark .sv-controls-row .lang-select {
+  background-color: rgba(30,41,59,0.6);
+  border-color: rgba(99,102,241,0.25);
+  color: #94a3b8;
+}
 
 /* ================================================================
    THEME: VIBRANT

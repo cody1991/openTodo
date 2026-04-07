@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../stores/authStore';
-import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
+import LangSelect from '../../components/LangSelect/LangSelect';
 import './LoginPage.css';
 
 function LoginForm({ onSuccess }) {
@@ -155,15 +155,7 @@ export default function LoginPage() {
         <Tabs items={tabs} centered className="login-tabs" />
 
         <div className="login-lang-bar">
-          {SUPPORTED_LANGUAGES.map((lang) => (
-            <button
-              key={lang.value}
-              className={`login-lang-btn${i18n.language === lang.value ? ' active' : ''}`}
-              onClick={() => i18n.changeLanguage(lang.value)}
-            >
-              {lang.label}
-            </button>
-          ))}
+          <LangSelect />
         </div>
       </div>
     </div>
