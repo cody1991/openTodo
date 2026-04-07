@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space, Button } from 'antd';
@@ -53,11 +53,25 @@ export default function AppLayout() {
   const unreadCount = notifData?.unread_count || 0;
   const pendingShareReqCount = shareReqData?.pending_count || 0;
 
+  // ── Scroll to top on route change ───────────────────────────
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  // ── Mobile detection ─────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 767);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   // ── Draggable pill ──────────────────────────────────────────
   const pillNodeRef = useRef(null);
   const [pillPos, setPillPos] = useState(() => {
     try {
-      const s = localStorage.getItem('opentodo-pill-pos');
+      const s = localStorage.getItem('opentodo-pill-pos-v2');
       if (s) return JSON.parse(s);
     } catch {}
     return { x: 0, y: 0 };
@@ -66,8 +80,33 @@ export default function AppLayout() {
   const onPillStop = (_, data) => {
     const pos = { x: data.x, y: data.y };
     setPillPos(pos);
-    localStorage.setItem('opentodo-pill-pos', JSON.stringify(pos));
+    localStorage.setItem('opentodo-pill-pos-v2', JSON.stringify(pos));
   };
+
+  // Clamp pill back into bounds on window resize
+  useEffect(() => {
+    const onResize = () => {
+      if (!pillNodeRef.current) return;
+      const el = pillNodeRef.current;
+      const rect = el.getBoundingClientRect();
+      if (rect.right > window.innerWidth || rect.bottom > window.innerHeight
+        || rect.left < 0 || rect.top < 0) {
+        const clampedX = Math.min(
+          Math.max(pillPos.x, -(window.innerWidth - el.offsetWidth - 8)),
+          window.innerWidth - 8
+        );
+        const clampedY = Math.min(
+          Math.max(pillPos.y, -(window.innerHeight - el.offsetHeight - 8)),
+          window.innerHeight - 8
+        );
+        const pos = { x: clampedX, y: clampedY };
+        setPillPos(pos);
+        localStorage.setItem('opentodo-pill-pos-v2', JSON.stringify(pos));
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [pillPos]);
 
   const navItems = useMemo(
     () => [
@@ -163,8 +202,10 @@ export default function AppLayout() {
       <Layout className="main-layout" style={{ marginLeft: collapsed ? 60 : 220 }}>
         <Draggable
           nodeRef={pillNodeRef}
-          position={pillPos}
-          onStop={onPillStop}
+          position={isMobile ? { x: 0, y: 0 } : pillPos}
+          onStop={isMobile ? undefined : onPillStop}
+          disabled={isMobile}
+          bounds="window"
           cancel="button, a, .ant-dropdown-trigger, .ant-popover-open, [role='menuitem']"
         >
         <div ref={pillNodeRef} className="app-header">
