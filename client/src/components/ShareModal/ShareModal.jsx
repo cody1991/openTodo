@@ -559,19 +559,31 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                 <Button onClick={() => setCurrent((c) => c - 1)}>{t('common.prev')}</Button>
               )}
               <div style={{ flex: 1 }} />
+              {isEditMode && (
+                <Button
+                  type={current === STEPS.length - 1 ? 'primary' : 'default'}
+                  icon={<CheckOutlined />}
+                  loading={updateMutation.isPending}
+                  onClick={handleCreate}
+                >
+                  {t('share.saveChanges')}
+                </Button>
+              )}
               {current < STEPS.length - 1 ? (
-                <Button type="primary" onClick={() => setCurrent((c) => c + 1)}>
+                <Button type={isEditMode ? 'default' : 'primary'} onClick={() => setCurrent((c) => c + 1)}>
                   {t('common.next')}
                 </Button>
               ) : (
-                <Button
-                  type="primary"
-                  icon={<LinkOutlined />}
-                  loading={createMutation.isPending || updateMutation.isPending}
-                  onClick={handleCreate}
-                >
-                  {isEditMode ? t('share.saveChanges') : t('share.generate')}
-                </Button>
+                !isEditMode && (
+                  <Button
+                    type="primary"
+                    icon={<LinkOutlined />}
+                    loading={createMutation.isPending}
+                    onClick={handleCreate}
+                  >
+                    {t('share.generate')}
+                  </Button>
+                )
               )}
             </div>
           </>

@@ -3,14 +3,14 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space, Button } from 'antd';
 import {
   DashboardOutlined, UnorderedListOutlined, CalendarOutlined,
-  SettingOutlined, UserOutlined, LogoutOutlined, BellOutlined,
+  SettingOutlined, LogoutOutlined,
   TeamOutlined, CheckSquareOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  StarOutlined, InboxOutlined, TagsOutlined,
+  StarOutlined, InboxOutlined, TagsOutlined, GlobalOutlined, CheckOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../stores/authStore';
-import LangSelect from '../LangSelect/LangSelect';
+import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
 import { notificationApi, shareRequestApi } from '../../services/api';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import './AppLayout.css';
@@ -83,6 +83,21 @@ export default function AppLayout() {
     { type: 'divider' },
     { key: 'settings', icon: <SettingOutlined />, label: t('nav.settings'), onClick: () => navigate('/settings') },
     ...(isAdmin() ? [{ key: 'admin', icon: <TeamOutlined />, label: t('nav.admin'), onClick: () => navigate('/admin') }] : []),
+    {
+      key: 'language',
+      icon: <GlobalOutlined />,
+      label: t('nav.language'),
+      children: SUPPORTED_LANGUAGES.map((lang) => ({
+        key: `lang-${lang.value}`,
+        label: (
+          <Space>
+            {lang.label}
+            {i18n.language === lang.value && <CheckOutlined style={{ color: '#6366f1', fontSize: 11 }} />}
+          </Space>
+        ),
+        onClick: () => i18n.changeLanguage(lang.value),
+      })),
+    },
     { type: 'divider' },
     { key: 'logout', icon: <LogoutOutlined />, label: t('nav.logout'), danger: true, onClick: async () => { await logout(); navigate('/'); } },
   ];
@@ -129,14 +144,11 @@ export default function AppLayout() {
 
       <Layout className="main-layout" style={{ marginLeft: collapsed ? 60 : 220 }}>
         <Header className="app-header">
-          <div className="header-left">
-            <div className="mobile-logo">
-              <div className="logo-icon-wrap" style={{ width: 28, height: 28, fontSize: 13 }}>
-                <CheckSquareOutlined />
-              </div>
-              <span className="gradient-text" style={{ fontSize: 15, fontWeight: 800 }}>OpenTodo</span>
+          <div className="mobile-logo">
+            <div className="logo-icon-wrap" style={{ width: 28, height: 28, fontSize: 13 }}>
+              <CheckSquareOutlined />
             </div>
-            <LangSelect />
+            <span className="gradient-text" style={{ fontSize: 15, fontWeight: 800 }}>OpenTodo</span>
           </div>
 
           <Space className="header-right">
