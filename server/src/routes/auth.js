@@ -30,9 +30,10 @@ const COOKIE_OPTIONS = {
 };
 
 router.post('/login', (req, res) => {
+  const { t } = req;
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password required' });
+    return res.status(400).json({ message: t('auth.credentialsRequired') });
   }
 
   const user = db
@@ -44,7 +45,7 @@ router.post('/login', (req, res) => {
     .get(username, username);
 
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.status(401).json({ message: 'Invalid credentials' });
+    return res.status(401).json({ message: t('auth.invalidCredentials') });
   }
 
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
@@ -56,35 +57,37 @@ router.post('/login', (req, res) => {
   const { password_hash, ...safeUser } = user;
   safeUser.permissions = JSON.parse(safeUser.permissions || '[]');
 
-  res.json({ message: 'Login successful', user: safeUser, token });
+  res.json({ message: t('auth.loginSuccess'), user: safeUser, token });
 });
 
 router.post('/register', (req, res) => {
+  const { t } = req;
+
   if (process.env.ALLOW_REGISTRATION === 'false') {
-    return res.status(403).json({ message: '当前不开放注册，请联系管理员' });
+    return res.status(403).json({ message: t('auth.registrationClosed') });
   }
 
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
-    return res.status(400).json({ message: '用户名、邮箱和密码均为必填项' });
+    return res.status(400).json({ message: t('auth.fieldsMissing') });
   }
   if (password.length < 8) {
-    return res.status(400).json({ message: '密码长度不能少于 8 位' });
+    return res.status(400).json({ message: t('auth.passwordTooShort') });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ message: '邮箱格式不正确' });
+    return res.status(400).json({ message: t('auth.invalidEmail') });
   }
 
   const exists = db
     .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
     .get(username, email);
   if (exists) {
-    return res.status(409).json({ message: '用户名或邮箱已被注册' });
+    return res.status(409).json({ message: t('auth.userExists') });
   }
 
   const userRole = db.prepare("SELECT id FROM roles WHERE name = 'user'").get();
   if (!userRole) {
-    return res.status(500).json({ message: '系统角色未初始化，请联系管理员' });
+    return res.status(500).json({ message: t('auth.roleNotInit') });
   }
 
   const hash = bcrypt.hashSync(password, 12);
@@ -111,12 +114,12 @@ router.post('/register', (req, res) => {
   const { password_hash, ...safeUser } = newUser;
   safeUser.permissions = JSON.parse(safeUser.permissions || '[]');
 
-  res.status(201).json({ message: '注册成功', user: safeUser, token });
+  res.status(201).json({ message: t('auth.registerSuccess'), user: safeUser, token });
 });
 
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
-  res.json({ message: 'Logged out' });
+  res.json({ message: req.t('auth.loggedOut') });
 });
 
 router.get('/me', authenticate, (req, res) => {
@@ -124,17 +127,18 @@ router.get('/me', authenticate, (req, res) => {
 });
 
 router.put('/password', authenticate, (req, res) => {
+  const { t } = req;
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: 'Both passwords required' });
+    return res.status(400).json({ message: t('auth.passwordsRequired') });
   }
   if (newPassword.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    return res.status(400).json({ message: t('auth.newPasswordTooShort') });
   }
 
   const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user.id);
   if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
-    return res.status(401).json({ message: 'Current password is incorrect' });
+    return res.status(401).json({ message: t('auth.currentPasswordWrong') });
   }
 
   const hash = bcrypt.hashSync(newPassword, 12);
@@ -143,15 +147,16 @@ router.put('/password', authenticate, (req, res) => {
     req.user.id
   );
 
-  res.json({ message: 'Password updated' });
+  res.json({ message: t('auth.passwordUpdated') });
 });
 
 router.put('/settings', authenticate, (req, res) => {
+  const { t } = req;
   const { wecom_webhook, notifications_enabled, daily_report_enabled, daily_report_time, avatar, timezone } =
     req.body;
 
   if (!isValidWebhookUrl(wecom_webhook)) {
-    return res.status(400).json({ message: 'Webhook URL 不合法，仅支持企业微信官方地址' });
+    return res.status(400).json({ message: t('auth.invalidWebhook') });
   }
 
   db.prepare(
@@ -174,7 +179,7 @@ router.put('/settings', authenticate, (req, res) => {
     req.user.id
   );
 
-  res.json({ message: 'Settings updated' });
+  res.json({ message: t('auth.settingsUpdated') });
 });
 
 module.exports = router;

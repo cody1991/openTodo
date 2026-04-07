@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "registrationClosed": "Registration is closed. Please contact an admin.",
+    "fieldsMissing": "Username, email, and password are all required.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "invalidEmail": "Invalid email format.",
+    "userExists": "Username or email is already registered.",
+    "roleNotInit": "System roles not initialized. Please contact an admin.",
+    "registerSuccess": "Registration successful.",
+    "invalidWebhook": "Invalid Webhook URL. Only official WeCom addresses are supported.",
+    "credentialsRequired": "Username and password are required.",
+    "invalidCredentials": "Invalid username or password.",
+    "loginSuccess": "Login successful.",
+    "loggedOut": "Logged out.",
+    "passwordsRequired": "Both current and new password are required.",
+    "newPasswordTooShort": "New password must be at least 8 characters.",
+    "currentPasswordWrong": "Current password is incorrect.",
+    "passwordUpdated": "Password updated.",
+    "settingsUpdated": "Settings saved."
+  },
+  "todos": {
+    "invalidFormat": "Invalid data format.",
+    "importSuccess": "Import successful.",
+    "importFailed": "Import failed.",
+    "categoryInvalid": "Category does not exist or you do not have access.",
+    "tagsInvalid": "One or more tags do not exist or you do not have access."
+  },
+  "share": {
+    "notFound": "Share link not found.",
+    "deleted": "Deleted.",
+    "expired": "This share link has expired.",
+    "titleRequired": "Title is required.",
+    "invalidPriority": "Invalid priority.",
+    "invalidCategory": "Invalid category.",
+    "invalidTags": "Invalid tags.",
+    "submitted": "Submitted."
+  },
+  "shareRequests": {
+    "notFound": "Request not found.",
+    "forbidden": "You do not have permission to perform this action.",
+    "alreadyHandled": "This request has already been handled."
+  },
+  "upload": {
+    "unsupportedFormat": "Unsupported image format."
+  },
+  "bookmarks": {
+    "maxDepth": "Only two levels of categories are supported."
+  }
+}

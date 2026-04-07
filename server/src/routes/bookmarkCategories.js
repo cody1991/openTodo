@@ -25,7 +25,7 @@ router.post('/', (req, res) => {
       .prepare('SELECT id, parent_id FROM bookmark_categories WHERE id = ? AND user_id = ?')
       .get(parent_id, req.user.id);
     if (!parent) return res.status(404).json({ message: 'Parent category not found' });
-    if (parent.parent_id) return res.status(400).json({ message: '最多支持两级分类' });
+    if (parent.parent_id) return res.status(400).json({ message: req.t('bookmarks.maxDepth') });
   }
 
   const result = db

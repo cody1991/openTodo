@@ -6,6 +6,7 @@ import {
   RocketOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Line, Pie } from '@ant-design/charts';
 import dayjs from 'dayjs';
 import { statsApi } from '../../services/api';
@@ -14,13 +15,6 @@ import { toUserTz } from '../../utils/date';
 import './Dashboard.css';
 
 const { Title, Text } = Typography;
-
-const PRIORITY_CONFIG = {
-  urgent: { color: '#ff4d6d', label: '紧急', icon: <FireOutlined /> },
-  high:   { color: '#ff8c42', label: '高',   icon: <ThunderboltOutlined /> },
-  medium: { color: '#ffd166', label: '中',   icon: <ClockCircleOutlined /> },
-  low:    { color: '#06d6a0', label: '低',   icon: <CheckCircleOutlined /> },
-};
 
 function CountUp({ value, duration = 900 }) {
   const ref = useRef(null);
@@ -61,6 +55,7 @@ function StatCard({ title, value, suffix, icon, color, bgColor }) {
 
 export default function Dashboard() {
   const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['stats', 'dashboard'],
     queryFn: statsApi.dashboard,
@@ -92,13 +87,13 @@ export default function Dashboard() {
       <div className="dashboard-header">
         <div>
           <Title level={2} style={{ margin: 0, fontWeight: 800, letterSpacing: -0.5, color: 'var(--text-primary)' }}>
-            <span className="gradient-text">工作台</span>
+            <span className="gradient-text">{t('dashboard.title')}</span>
           </Title>
           <div className="dashboard-date">
-            {dayjs().tz(tz).format('YYYY年M月D日 dddd')}
+            {dayjs().tz(tz).format(t('common.dateTimeFormat'))}
             {overview.due_today > 0 && (
               <span style={{ marginLeft: 12, color: '#ffd166' }}>
-                今日截止 {overview.due_today} 项
+                {t('dashboard.dueToday', { count: overview.due_today })}
               </span>
             )}
           </div>
@@ -115,7 +110,7 @@ export default function Dashboard() {
               borderRadius: 8,
             }}
           >
-            {overview.overdue} 项已逾期
+            {t('dashboard.overdue', { count: overview.overdue })}
           </Tag>
         )}
       </div>
@@ -123,17 +118,17 @@ export default function Dashboard() {
       {/* Stat row */}
       <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
         <Col xs={12} sm={12} md={6}>
-          <StatCard title="待完成" value={overview.pending} icon={<span>📋</span>} color="#7c6ef5" />
+          <StatCard title={t('dashboard.pending')} value={overview.pending} icon={<span>📋</span>} color="#7c6ef5" />
         </Col>
         <Col xs={12} sm={12} md={6}>
-          <StatCard title="今日截止" value={overview.due_today} icon={<ClockCircleOutlined />} color="#06d6c7" />
+          <StatCard title={t('dashboard.dueToday2')} value={overview.due_today} icon={<ClockCircleOutlined />} color="#06d6c7" />
         </Col>
         <Col xs={12} sm={12} md={6}>
-          <StatCard title="紧急任务" value={overview.urgent} icon={<FireOutlined />} color="#ff4d6d" />
+          <StatCard title={t('dashboard.urgentTasks')} value={overview.urgent} icon={<FireOutlined />} color="#ff4d6d" />
         </Col>
         <Col xs={12} sm={12} md={6}>
           <StatCard
-            title="已完成"
+            title={t('dashboard.completed')}
             value={overview.completed}
             suffix={`/ ${overview.total || 0}`}
             icon={<TrophyOutlined />}
@@ -146,7 +141,7 @@ export default function Dashboard() {
         {/* Completion ring */}
         <Col xs={24} sm={24} md={7}>
           <Card className="chart-card" styles={{ body: { padding: "18px" } }}>
-            <div className="chart-card-title" style={{ marginBottom: 16 }}>完成率</div>
+            <div className="chart-card-title" style={{ marginBottom: 16 }}>{t('dashboard.completionRate')}</div>
             <div className="completion-ring">
               <Progress
                 type="circle"
@@ -158,12 +153,12 @@ export default function Dashboard() {
                 format={(p) => (
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 26, fontWeight: 800, color: '#1a1d2e', lineHeight: 1 }}>{p}%</div>
-                    <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>完成率</div>
+                    <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('dashboard.completionRate')}</div>
                   </div>
                 )}
               />
               <span style={{ fontSize: 12, color: '#9ca3af' }}>
-                共 {overview.total || 0} 项 · 完成 {overview.completed || 0} 项
+                {t('dashboard.total', { total: overview.total || 0, completed: overview.completed || 0 })}
               </span>
             </div>
           </Card>
@@ -172,7 +167,7 @@ export default function Dashboard() {
         {/* 7-day trend */}
         <Col xs={24} sm={24} md={17}>
           <Card className="chart-card" styles={{ body: { padding: "18px" } }}>
-            <div className="chart-card-title" style={{ marginBottom: 16 }}>近 7 天完成趋势</div>
+            <div className="chart-card-title" style={{ marginBottom: 16 }}>{t('dashboard.last7Days')}</div>
             <Line
               data={chartData}
               xField="date"
@@ -212,9 +207,9 @@ export default function Dashboard() {
         {/* Categories */}
         <Col xs={24} sm={24} md={12}>
           <Card className="chart-card" styles={{ body: { padding: "18px" } }}>
-            <div className="chart-card-title" style={{ marginBottom: 16 }}>分类进度</div>
+            <div className="chart-card-title" style={{ marginBottom: 16 }}>{t('dashboard.categoryProgress')}</div>
             {byCategory.length === 0 ? (
-              <Empty description={<span style={{ color: 'var(--text-muted)' }}>还没有分类</span>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              <Empty description={<span style={{ color: 'var(--text-muted)' }}>{t('dashboard.noCategories')}</span>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
               <div className="category-list">
                 {byCategory.slice(0, 6).map((cat) => {
@@ -227,7 +222,7 @@ export default function Dashboard() {
                         <div className="category-dot" style={{ background: cat.color }} />
                         <Text style={{ color: 'var(--text-primary)', flex: 1, fontSize: 13 }}>{cat.name}</Text>
                         <Text style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                          {cat.pending > 0 ? `${cat.pending} 待完成` : '✓ 全部完成'}
+                          {cat.pending > 0 ? `${cat.pending} ${t('dashboard.pendingLabel')}` : t('dashboard.completedAll')}
                         </Text>
                       </div>
                       <Progress
@@ -253,13 +248,13 @@ export default function Dashboard() {
             styles={{ body: { padding: "18px" } }}
           >
             <div className="urgent-card-title" style={{ marginBottom: 16 }}>
-              <FireOutlined style={{ marginRight: 6 }} />紧急任务
+              <FireOutlined style={{ marginRight: 6 }} />{t('dashboard.urgentCard')}
             </div>
             {urgentTodos.length === 0 ? (
               <div className="empty-urgent">
                 <TrophyOutlined style={{ fontSize: 36, color: '#06d6a0' }} />
                 <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                  暂无紧急任务，继续保持！
+                  {t('dashboard.noUrgent')}
                 </Text>
               </div>
             ) : (

@@ -96,7 +96,7 @@ router.put('/:id', (req, res) => {
   const link = db
     .prepare('SELECT * FROM share_links WHERE id = ? AND user_id = ?')
     .get(req.params.id, req.user.id);
-  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+  if (!link) return res.status(404).json({ message: req.t('share.notFound') });
 
   const {
     name,
@@ -165,10 +165,10 @@ router.delete('/:id', (req, res) => {
   const link = db
     .prepare('SELECT * FROM share_links WHERE id = ? AND user_id = ?')
     .get(req.params.id, req.user.id);
-  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+  if (!link) return res.status(404).json({ message: req.t('share.notFound') });
 
   db.prepare('DELETE FROM share_links WHERE id = ?').run(req.params.id);
-  res.json({ message: '已删除' });
+  res.json({ message: req.t('share.deleted') });
 });
 
 module.exports = router;

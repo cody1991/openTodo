@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "registrationClosed": "現在登録を受け付けていません。管理者にお問い合わせください。",
+    "fieldsMissing": "ユーザー名、メールアドレス、パスワードはすべて必須です。",
+    "passwordTooShort": "パスワードは8文字以上である必要があります。",
+    "invalidEmail": "メールアドレスの形式が正しくありません。",
+    "userExists": "このユーザー名またはメールアドレスはすでに登録されています。",
+    "roleNotInit": "システムロールが初期化されていません。管理者にお問い合わせください。",
+    "registerSuccess": "登録が完了しました。",
+    "invalidWebhook": "無効なWebhook URLです。WeCom公式アドレスのみ対応しています。",
+    "credentialsRequired": "ユーザー名とパスワードは必須です。",
+    "invalidCredentials": "ユーザー名またはパスワードが正しくありません。",
+    "loginSuccess": "ログインしました。",
+    "loggedOut": "ログアウトしました。",
+    "passwordsRequired": "現在のパスワードと新しいパスワードを入力してください。",
+    "newPasswordTooShort": "新しいパスワードは8文字以上である必要があります。",
+    "currentPasswordWrong": "現在のパスワードが正しくありません。",
+    "passwordUpdated": "パスワードを変更しました。",
+    "settingsUpdated": "設定を保存しました。"
+  },
+  "todos": {
+    "invalidFormat": "データ形式が正しくありません。",
+    "importSuccess": "インポートが完了しました。",
+    "importFailed": "インポートに失敗しました。",
+    "categoryInvalid": "カテゴリが存在しないか、アクセス権がありません。",
+    "tagsInvalid": "タグが存在しないか、アクセス権がありません。"
+  },
+  "share": {
+    "notFound": "共有リンクが見つかりません。",
+    "deleted": "削除しました。",
+    "expired": "この共有リンクは期限切れです。",
+    "titleRequired": "タイトルを入力してください。",
+    "invalidPriority": "無効な優先度です。",
+    "invalidCategory": "無効なカテゴリです。",
+    "invalidTags": "無効なタグです。",
+    "submitted": "送信しました。"
+  },
+  "shareRequests": {
+    "notFound": "リクエストが見つかりません。",
+    "forbidden": "この操作を行う権限がありません。",
+    "alreadyHandled": "このリクエストはすでに処理済みです。"
+  },
+  "upload": {
+    "unsupportedFormat": "サポートされていない画像形式です。"
+  },
+  "bookmarks": {
+    "maxDepth": "カテゴリは最大2階層まで対応しています。"
+  }
+}

@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { shareRequestApi, categoryApi, tagApi } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import { toUTCString, utcToDayjsInTz } from '../../utils/date';
@@ -15,33 +16,13 @@ import './ShareRequestsPage.css';
 
 const { Title, Text } = Typography;
 
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: '🟢 低' },
-  { value: 'medium', label: '🟡 中' },
-  { value: 'high', label: '🟠 高' },
-  { value: 'urgent', label: '🔴 紧急' },
-];
-
-const STATUS_LABEL = {
-  pending: '待审核',
-  approved: '已通过',
-  rejected: '已拒绝',
-};
-
-const PRIORITY_LABEL = {
-  urgent: '紧急',
-  high: '高',
-  medium: '中',
-  low: '低',
-};
-
 function categoryNameById(categories, id) {
   if (id == null) return null;
   const c = categories.find((x) => x.id === id);
   return c?.name || null;
 }
 
-function buildCategoryOptions(allCategories) {
+function buildCategoryOptions(allCategories, thisCategory) {
   const rootCats = allCategories.filter((c) => !c.parent_id);
   const childCats = allCategories.filter((c) => c.parent_id);
   const rootsWithChildren = new Set(childCats.map((c) => c.parent_id));
@@ -73,7 +54,7 @@ function buildCategoryOptions(allCategories) {
       label: rootLabel,
       title: root.name,
       options: [
-        { value: root.id, label: <Space size={6}><span style={dotStyle} />{root.name}（本分类）</Space> },
+        { value: root.id, label: <Space size={6}><span style={dotStyle} />{root.name}{thisCategory}</Space> },
         ...groupChildren,
       ],
     };
@@ -81,8 +62,9 @@ function buildCategoryOptions(allCategories) {
 }
 
 export default function ShareRequestsPage() {
+  const { t } = useTranslation();
   const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
-  const [filter, setFilter] = useState('pending'); // pending | approved | rejected | all
+  const [filter, setFilter] = useState('pending');
   const [previewRow, setPreviewRow] = useState(null);
   const [approveRow, setApproveRow] = useState(null);
   const [form] = Form.useForm();
@@ -93,7 +75,27 @@ export default function ShareRequestsPage() {
   const { data: tagData } = useQuery({ queryKey: ['tags'], queryFn: tagApi.list });
   const categories = catData?.categories || [];
   const allTags = tagData?.tags || [];
-  const categoryOptions = buildCategoryOptions(categories);
+  const categoryOptions = buildCategoryOptions(categories, t('shareRequests.thisCategory'));
+
+  const PRIORITY_OPTIONS = [
+    { value: 'low', label: t('shareRequests.priorityLow') },
+    { value: 'medium', label: t('shareRequests.priorityMedium') },
+    { value: 'high', label: t('shareRequests.priorityHigh') },
+    { value: 'urgent', label: t('shareRequests.priorityUrgent') },
+  ];
+
+  const STATUS_LABEL = {
+    pending: t('shareRequests.statusPending'),
+    approved: t('shareRequests.statusApproved'),
+    rejected: t('shareRequests.statusRejected'),
+  };
+
+  const PRIORITY_LABEL = {
+    urgent: t('shareRequests.priorityUrgent').replace(/^[^ ]+ /, ''),
+    high: t('shareRequests.priorityHigh').replace(/^[^ ]+ /, ''),
+    medium: t('shareRequests.priorityMedium').replace(/^[^ ]+ /, ''),
+    low: t('shareRequests.priorityLow').replace(/^[^ ]+ /, ''),
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['share-requests', filter],
@@ -110,23 +112,23 @@ export default function ShareRequestsPage() {
   const approveMutation = useMutation({
     mutationFn: ({ id, payload }) => shareRequestApi.approve(id, payload),
     onSuccess: () => {
-      message.success('已加入 TODO');
+      message.success(t('shareRequests.approvedMsg'));
       queryClient.invalidateQueries({ queryKey: ['share-requests'] });
       queryClient.invalidateQueries({ queryKey: ['share-requests', 'badge'] });
       queryClient.invalidateQueries({ queryKey: ['todos'] });
       setApproveRow(null);
     },
-    onError: (err) => message.error(err?.message || '操作失败'),
+    onError: (err) => message.error(err?.message || t('shareRequests.opFailed')),
   });
 
   const rejectMutation = useMutation({
     mutationFn: (id) => shareRequestApi.reject(id),
     onSuccess: () => {
-      message.success('已拒绝');
+      message.success(t('shareRequests.rejectedMsg'));
       queryClient.invalidateQueries({ queryKey: ['share-requests'] });
       queryClient.invalidateQueries({ queryKey: ['share-requests', 'badge'] });
     },
-    onError: (err) => message.error(err?.message || '操作失败'),
+    onError: (err) => message.error(err?.message || t('shareRequests.opFailed')),
   });
 
   const openApprove = (row) => {
@@ -179,25 +181,25 @@ export default function ShareRequestsPage() {
 
   const columns = [
     {
-      title: '标题',
+      title: t('shareRequests.colTitle'),
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
-      render: (t, row) => (
+      render: (val, row) => (
         <Button type="link" style={{ padding: 0, height: 'auto', textAlign: 'left' }} onClick={() => setPreviewRow(row)}>
-          {t}
+          {val}
         </Button>
       ),
     },
     {
-      title: '优先级',
+      title: t('shareRequests.colPriority'),
       dataIndex: 'priority',
       key: 'priority',
-      width: 72,
+      width: 80,
       render: (p) => PRIORITY_LABEL[p] || p,
     },
     {
-      title: '来源分享',
+      title: t('shareRequests.colShareSource'),
       dataIndex: 'share_name',
       key: 'share_name',
       width: 160,
@@ -209,7 +211,7 @@ export default function ShareRequestsPage() {
             href={`/share/${row.share_key}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="在新标签页打开分享页"
+            title={t('shareRequests.openSharePage')}
           >
             {name || '—'}
           </a>
@@ -218,32 +220,32 @@ export default function ShareRequestsPage() {
         ),
     },
     {
-      title: '状态',
+      title: t('shareRequests.colStatus'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (s) => <Tag color={s === 'pending' ? 'gold' : s === 'approved' ? 'green' : 'default'}>{STATUS_LABEL[s] || s}</Tag>,
     },
     {
-      title: '提交时间',
+      title: t('shareRequests.colSubmittedAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 170,
       render: (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '—'),
     },
     {
-      title: '操作',
+      title: t('shareRequests.colActions'),
       key: 'actions',
-      width: 200,
+      width: 220,
       render: (_, row) => (
         <Space>
           {row.status === 'pending' && (
             <>
               <Button type="primary" size="small" onClick={() => openApprove(row)}>
-                通过
+                {t('shareRequests.approve')}
               </Button>
-              <Popconfirm title="确定拒绝该需求？" onConfirm={() => rejectMutation.mutate(row.id)}>
-                <Button size="small" danger loading={rejectMutation.isPending}>拒绝</Button>
+              <Popconfirm title={t('shareRequests.rejectConfirm')} onConfirm={() => rejectMutation.mutate(row.id)}>
+                <Button size="small" danger loading={rejectMutation.isPending}>{t('shareRequests.reject')}</Button>
               </Popconfirm>
             </>
           )}
@@ -258,17 +260,17 @@ export default function ShareRequestsPage() {
   return (
     <div className="share-req-page">
       <div className="share-req-header">
-        <Title level={4} style={{ margin: 0 }}>需求收件箱</Title>
-        <Text type="secondary">访客在分享页提交的「提需求」，通过后将写入你的 TODO 列表</Text>
+        <Title level={4} style={{ margin: 0 }}>{t('shareRequests.pageTitle')}</Title>
+        <Text type="secondary">{t('shareRequests.pageDesc')}</Text>
       </div>
 
       <div className="share-req-toolbar">
         <Segmented
           options={[
-            { label: `待审核${pendingCount ? ` (${pendingCount})` : ''}`, value: 'pending' },
-            { label: '已通过', value: 'approved' },
-            { label: '已拒绝', value: 'rejected' },
-            { label: '全部', value: 'all' },
+            { label: `${t('shareRequests.statusPending')}${pendingCount ? ` (${pendingCount})` : ''}`, value: 'pending' },
+            { label: t('shareRequests.statusApproved'), value: 'approved' },
+            { label: t('shareRequests.statusRejected'), value: 'rejected' },
+            { label: t('shareRequests.statusAll'), value: 'all' },
           ]}
           value={filter}
           onChange={setFilter}
@@ -284,7 +286,7 @@ export default function ShareRequestsPage() {
       />
 
       <Drawer
-        title="需求详情"
+        title={t('shareRequests.drawerTitle')}
         open={!!previewRow}
         onClose={() => setPreviewRow(null)}
         width={600}
@@ -292,23 +294,23 @@ export default function ShareRequestsPage() {
           previewRow?.status === 'pending' ? (
             <div style={{ textAlign: 'right' }}>
               <Space>
-                <Button onClick={() => setPreviewRow(null)}>关闭</Button>
+                <Button onClick={() => setPreviewRow(null)}>{t('shareRequests.close')}</Button>
                 <Button type="primary" onClick={openApproveFromPreview}>
-                  通过并加入 TODO
+                  {t('shareRequests.approveAndAdd')}
                 </Button>
                 <Popconfirm
-                  title="确定拒绝该需求？"
-                  okText="拒绝"
+                  title={t('shareRequests.rejectConfirm')}
+                  okText={t('shareRequests.reject')}
                   okButtonProps={{ danger: true }}
                   onConfirm={rejectFromPreview}
                 >
-                  <Button danger loading={rejectMutation.isPending}>拒绝</Button>
+                  <Button danger loading={rejectMutation.isPending}>{t('shareRequests.reject')}</Button>
                 </Popconfirm>
               </Space>
             </div>
           ) : (
             <div style={{ textAlign: 'right' }}>
-              <Button onClick={() => setPreviewRow(null)}>关闭</Button>
+              <Button onClick={() => setPreviewRow(null)}>{t('shareRequests.close')}</Button>
             </div>
           )
         }
@@ -321,7 +323,7 @@ export default function ShareRequestsPage() {
 
             <div className="share-req-dl">
               <div className="share-req-dl-row">
-                <span className="share-req-dl-k">状态</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailStatus')}</span>
                 <span className="share-req-dl-v">
                   <Tag color={previewRow.status === 'pending' ? 'gold' : previewRow.status === 'approved' ? 'green' : 'default'}>
                     {STATUS_LABEL[previewRow.status] || previewRow.status}
@@ -329,17 +331,17 @@ export default function ShareRequestsPage() {
                 </span>
               </div>
               <div className="share-req-dl-row">
-                <span className="share-req-dl-k">优先级</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailPriority')}</span>
                 <span className="share-req-dl-v">{PRIORITY_LABEL[previewRow.priority] || previewRow.priority}</span>
               </div>
               <div className="share-req-dl-row">
-                <span className="share-req-dl-k">分类</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailCategory')}</span>
                 <span className="share-req-dl-v">
                   {categoryNameById(categories, previewRow.category_id) || '—'}
                 </span>
               </div>
               <div className="share-req-dl-row">
-                <span className="share-req-dl-k">期望完成</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailDue')}</span>
                 <span className="share-req-dl-v">
                   {previewRow.due_date
                     ? utcToDayjsInTz(previewRow.due_date, tz).format('YYYY-MM-DD HH:mm')
@@ -347,7 +349,7 @@ export default function ShareRequestsPage() {
                 </span>
               </div>
               <div className="share-req-dl-row">
-                <span className="share-req-dl-k">来源分享</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailShareSource')}</span>
                 <span className="share-req-dl-v">
                   {previewRow.share_key ? (
                     <a
@@ -355,7 +357,7 @@ export default function ShareRequestsPage() {
                       href={`/share/${previewRow.share_key}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="在新标签页打开分享页"
+                      title={t('shareRequests.openSharePage')}
                     >
                       {previewRow.share_name || '—'}
                     </a>
@@ -366,7 +368,7 @@ export default function ShareRequestsPage() {
               </div>
               {previewRow.share_key && (
                 <div className="share-req-dl-row">
-                  <span className="share-req-dl-k">分享页</span>
+                  <span className="share-req-dl-k">{t('shareRequests.detailSharePage')}</span>
                   <span className="share-req-dl-v">
                     <Space size="small" wrap align="center">
                       <a
@@ -374,21 +376,21 @@ export default function ShareRequestsPage() {
                         href={`/share/${previewRow.share_key}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        title="在新标签页打开分享页"
+                        title={t('shareRequests.openSharePage')}
                       >
                         /share/{previewRow.share_key}
                       </a>
-                      <Tooltip title="复制完整链接">
+                      <Tooltip title={t('shareRequests.detailCopyLink')}>
                         <Button
                           type="text"
                           size="small"
                           icon={<CopyOutlined />}
-                          aria-label="复制完整链接"
+                          aria-label={t('shareRequests.detailCopyLink')}
                           onClick={() => {
                             const u = `${window.location.origin}/share/${previewRow.share_key}`;
                             navigator.clipboard.writeText(u).then(
-                              () => message.success('已复制链接'),
-                              () => message.error('复制失败，请手动复制地址栏链接')
+                              () => message.success(t('shareRequests.detailCopied')),
+                              () => message.error(t('shareRequests.detailCopyFailed'))
                             );
                           }}
                         />
@@ -398,14 +400,14 @@ export default function ShareRequestsPage() {
                 </div>
               )}
               <div className="share-req-dl-row">
-                <span className="share-req-dl-k">提交时间</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailSubmittedAt')}</span>
                 <span className="share-req-dl-v">
                   {previewRow.created_at ? dayjs(previewRow.created_at).format('YYYY-MM-DD HH:mm:ss') : '—'}
                 </span>
               </div>
               {previewRow.reviewed_at && (
                 <div className="share-req-dl-row">
-                  <span className="share-req-dl-k">处理时间</span>
+                  <span className="share-req-dl-k">{t('shareRequests.detailReviewedAt')}</span>
                   <span className="share-req-dl-v">
                     {dayjs(previewRow.reviewed_at).format('YYYY-MM-DD HH:mm:ss')}
                   </span>
@@ -413,31 +415,33 @@ export default function ShareRequestsPage() {
               )}
               {previewRow.contact && (
                 <div className="share-req-dl-row">
-                  <span className="share-req-dl-k">联系方式</span>
+                  <span className="share-req-dl-k">{t('shareRequests.detailContact')}</span>
                   <span className="share-req-dl-v">{previewRow.contact}</span>
                 </div>
               )}
               <div className="share-req-dl-row share-req-dl-row--tags">
-                <span className="share-req-dl-k">标签</span>
+                <span className="share-req-dl-k">{t('shareRequests.detailTags')}</span>
                 <span className="share-req-dl-v">
                   {(previewRow.tags || []).length > 0
-                    ? (previewRow.tags || []).map((t) => (
-                      <Tag key={t.id} color={t.color}>{t.name}</Tag>
+                    ? (previewRow.tags || []).map((tag) => (
+                      <Tag key={tag.id} color={tag.color}>{tag.name}</Tag>
                     ))
                     : '—'}
                 </span>
               </div>
             </div>
 
-            <div className="share-req-section-label">正文（Markdown）</div>
+            <div className="share-req-section-label">{t('shareRequests.detailContent')}</div>
             <div className="share-req-md share-req-md--body">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{previewRow.content?.trim() ? previewRow.content : '*（无正文）*'}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {previewRow.content?.trim() ? previewRow.content : t('shareRequests.detailNoContent')}
+              </ReactMarkdown>
             </div>
 
             {previewRow.status === 'approved' && previewRow.result_todo_id && (
               <div className="share-req-after-note">
                 <Text type="secondary">
-                  已生成 TODO #{previewRow.result_todo_id}，可在 TODO 列表中继续编辑。
+                  {t('shareRequests.detailTodoCreated', { id: previewRow.result_todo_id })}
                 </Text>
               </div>
             )}
@@ -446,7 +450,7 @@ export default function ShareRequestsPage() {
       </Drawer>
 
       <Modal
-        title="通过并加入 TODO"
+        title={t('shareRequests.modalTitle')}
         open={!!approveRow}
         onCancel={() => setApproveRow(null)}
         onOk={submitApprove}
@@ -455,17 +459,17 @@ export default function ShareRequestsPage() {
         destroyOnClose
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
+          <Form.Item name="title" label={t('shareRequests.formTitle')} rules={[{ required: true, message: t('shareRequests.formTitleRequired') }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="priority" label="优先级">
+          <Form.Item name="priority" label={t('shareRequests.formPriority')}>
             <Select options={PRIORITY_OPTIONS} />
           </Form.Item>
           <Form.Item
             name="due_date"
             label={(
               <Space>
-                <span>截止时间</span>
+                <span>{t('shareRequests.formDueDate')}</span>
                 <Switch
                   size="small"
                   checked={showExactTime}
@@ -476,8 +480,8 @@ export default function ShareRequestsPage() {
                       if (cur) form.setFieldValue('due_date', cur.startOf('day'));
                     }
                   }}
-                  checkedChildren="精确时间"
-                  unCheckedChildren="精确时间"
+                  checkedChildren={t('shareRequests.formExactTime')}
+                  unCheckedChildren={t('shareRequests.formExactTime')}
                 />
               </Space>
             )}
@@ -488,16 +492,16 @@ export default function ShareRequestsPage() {
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item name="category_id" label="分类">
-            <Select allowClear placeholder="分类" options={categoryOptions} />
+          <Form.Item name="category_id" label={t('shareRequests.formCategory')}>
+            <Select allowClear placeholder={t('shareRequests.formCategoryPlaceholder')} options={categoryOptions} />
           </Form.Item>
-          <Form.Item name="tag_ids" label="标签">
+          <Form.Item name="tag_ids" label={t('shareRequests.formTags')}>
             <Select
               mode="multiple"
               allowClear
-              options={allTags.map((t) => ({ value: t.id, label: t.name }))}
+              options={allTags.map((tag) => ({ value: tag.id, label: tag.name }))}
               tagRender={({ label, value, closable, onClose }) => {
-                const tag = allTags.find((t) => t.id === value);
+                const tag = allTags.find((tg) => tg.id === value);
                 return (
                   <Tag color={tag?.color} closable={closable} onClose={onClose} style={{ marginRight: 2 }}>
                     {label}
@@ -506,12 +510,12 @@ export default function ShareRequestsPage() {
               }}
             />
           </Form.Item>
-          <Form.Item name="notify_enabled" valuePropName="checked" label="提醒">
-            <Switch checkedChildren="开启推送" unCheckedChildren="关闭" />
+          <Form.Item name="notify_enabled" valuePropName="checked" label={t('shareRequests.formNotify')}>
+            <Switch checkedChildren={t('shareRequests.formNotifyOn')} unCheckedChildren={t('shareRequests.formNotifyOff')} />
           </Form.Item>
           {approveRow && (
             <div style={{ marginTop: 8 }}>
-              <Text type="secondary">正文预览（可在 TODO 列表中继续编辑）</Text>
+              <Text type="secondary">{t('shareRequests.formContentPreview')}</Text>
               <div className="share-req-md share-req-md--compact">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{approveRow.content || ''}</ReactMarkdown>
               </div>

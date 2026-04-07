@@ -14,71 +14,28 @@ import {
   StarOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../stores/authStore';
+import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
 import './LandingPage.css';
 
-const FEATURES = [
-  {
-    icon: <EditOutlined />,
-    color: '#6366f1',
-    bg: '#eef2ff',
-    title: 'Markdown 编辑',
-    desc: '支持 GFM 扩展语法、代码高亮，嵌入图片一键上传，所见即所得。',
-  },
-  {
-    icon: <CalendarOutlined />,
-    color: '#0ea5e9',
-    bg: '#e0f2fe',
-    title: '日历视图',
-    desc: '截止时间一目了然，拖拽任务到对应日期，按月 / 周切换查看。',
-  },
-  {
-    icon: <BellOutlined />,
-    color: '#f59e0b',
-    bg: '#fef3c7',
-    title: '企业微信通知',
-    desc: '到期提醒 + 每日工作报告，自动推送到企业微信机器人。',
-  },
-  {
-    icon: <BarChartOutlined />,
-    color: '#10b981',
-    bg: '#d1fae5',
-    title: '数据看板',
-    desc: '完成率、趋势折线、分类统计，实时掌握工作进度与效率。',
-  },
-  {
-    icon: <StarOutlined />,
-    color: '#ec4899',
-    bg: '#fce7f3',
-    title: '网站收藏',
-    desc: '两级分类整理收藏网站，自动抓取 Favicon，一键直达常用链接。',
-  },
-  {
-    icon: <TagsOutlined />,
-    color: '#f97316',
-    bg: '#fff7ed',
-    title: '分类 & 标签',
-    desc: '多维度整理 TODO，按分类筛选，用标签跨分类检索，查找毫秒级。',
-  },
-  {
-    icon: <TeamOutlined />,
-    color: '#8b5cf6',
-    bg: '#f3f0ff',
-    title: '角色权限',
-    desc: '内置管理员 / 用户角色，可自定义扩展权限，每人数据完全隔离。',
-  },
+const FEATURE_KEYS = [
+  { key: 'markdown', icon: <EditOutlined />,     color: '#6366f1', bg: '#eef2ff' },
+  { key: 'calendar', icon: <CalendarOutlined />, color: '#0ea5e9', bg: '#e0f2fe' },
+  { key: 'wecom',    icon: <BellOutlined />,     color: '#f59e0b', bg: '#fef3c7' },
+  { key: 'dashboard',icon: <BarChartOutlined />, color: '#10b981', bg: '#d1fae5' },
+  { key: 'bookmarks',icon: <StarOutlined />,     color: '#ec4899', bg: '#fce7f3' },
+  { key: 'tags',     icon: <TagsOutlined />,     color: '#f97316', bg: '#fff7ed' },
+  { key: 'roles',    icon: <TeamOutlined />,     color: '#8b5cf6', bg: '#f3f0ff' },
 ];
 
-const STEPS = [
-  { num: '01', title: '注册 / 登录', desc: '管理员创建账号，设置你的用户名和密码即可开始。' },
-  { num: '02', title: '创建 TODO', desc: '写下任务标题和 Markdown 正文，设置优先级与截止时间。' },
-  { num: '03', title: '掌控进度', desc: '通过看板、日历、数据看板随时查看任务状态，收到通知提醒。' },
-];
+const STEP_KEYS = ['s1', 's2', 's3'];
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const heroRef = useRef(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const onScroll = () => {
@@ -92,6 +49,7 @@ export default function LandingPage() {
   }, []);
 
   const goApp = () => navigate(user ? '/todos' : '/login');
+  const mockNav = t('landing.mockNav', { returnObjects: true });
 
   return (
     <div className="landing">
@@ -104,18 +62,34 @@ export default function LandingPage() {
             </div>
             <span className="landing-logo-text">OpenTodo</span>
           </div>
-          <Space size={12}>
-            {user ? (
-              <Button type="primary" className="nav-cta" onClick={goApp} icon={<ArrowRightOutlined />} iconPosition="end">
-                进入应用
-              </Button>
-            ) : (
-              <>
-                <Button className="nav-login" onClick={() => navigate('/login')}>登录</Button>
-                <Button type="primary" className="nav-cta" onClick={goApp}>立即使用</Button>
-              </>
-            )}
-          </Space>
+
+          <div className="landing-nav-right">
+            {/* Language switcher */}
+            <div className="landing-lang-switcher">
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <button
+                  key={lang.value}
+                  className={`landing-lang-btn${i18n.language === lang.value ? ' active' : ''}`}
+                  onClick={() => i18n.changeLanguage(lang.value)}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+
+            <Space size={12}>
+              {user ? (
+                <Button type="primary" className="nav-cta" onClick={goApp} icon={<ArrowRightOutlined />} iconPosition="end">
+                  {t('landing.enterApp')}
+                </Button>
+              ) : (
+                <>
+                  <Button className="nav-login" onClick={() => navigate('/login')}>{t('landing.login')}</Button>
+                  <Button type="primary" className="nav-cta" onClick={goApp}>{t('landing.startNow')}</Button>
+                </>
+              )}
+            </Space>
+          </div>
         </div>
       </nav>
 
@@ -127,22 +101,19 @@ export default function LandingPage() {
         <div className="hero-inner">
           <div className="hero-badge">
             <CheckCircleFilled style={{ color: '#6366f1', marginRight: 6 }} />
-            开源 · 自托管 · 轻量级任务管理
+            {t('landing.badge')}
           </div>
           <h1 className="hero-title">
-            让每一项任务<br />
-            <span className="hero-gradient">清晰、高效、可追踪</span>
+            {t('landing.heroTitle1')}<br />
+            <span className="hero-gradient">{t('landing.heroTitle2')}</span>
           </h1>
-          <p className="hero-sub">
-            OpenTodo 是一款为个人与小团队打造的全功能效率应用——<br />
-            TODO 管理、网站收藏、日历追踪、智能通知，一站式搞定。
-          </p>
+          <p className="hero-sub">{t('landing.heroSub')}</p>
           <Space size={16} wrap className="hero-actions">
             <Button type="primary" size="large" className="hero-btn-primary" onClick={goApp} icon={<ArrowRightOutlined />} iconPosition="end">
-              {user ? '进入应用' : '立即开始'}
+              {user ? t('landing.enterApp') : t('landing.getStarted')}
             </Button>
             <Button size="large" className="hero-btn-ghost" href="https://github.com/cody1991/openTodo" target="_blank" icon={<GithubOutlined />}>
-              查看源码
+              {t('landing.viewSource')}
             </Button>
           </Space>
           {/* mock screenshot card */}
@@ -152,8 +123,8 @@ export default function LandingPage() {
             </div>
             <div className="hero-card-content">
               <div className="mock-sidebar">
-                {['总览', 'TODO 列表', '日历', '网站收藏', '设置'].map((l, i) => (
-                  <div key={l} className={`mock-nav-item ${i === 1 ? 'active' : ''}`}>{l}</div>
+                {(Array.isArray(mockNav) ? mockNav : []).map((l, i) => (
+                  <div key={i} className={`mock-nav-item ${i === 1 ? 'active' : ''}`}>{l}</div>
                 ))}
               </div>
               <div className="mock-main">
@@ -163,9 +134,9 @@ export default function LandingPage() {
                 </div>
                 {[
                   { p: 'urgent', done: false, w: 70 },
-                  { p: 'high', done: false, w: 85 },
-                  { p: 'medium', done: true, w: 60 },
-                  { p: 'low', done: true, w: 50 },
+                  { p: 'high',   done: false, w: 85 },
+                  { p: 'medium', done: true,  w: 60 },
+                  { p: 'low',    done: true,  w: 50 },
                   { p: 'medium', done: false, w: 75 },
                 ].map((item, i) => (
                   <div key={i} className={`mock-todo ${item.done ? 'done' : ''}`}>
@@ -183,17 +154,17 @@ export default function LandingPage() {
       {/* ─── Features ─── */}
       <section className="landing-section landing-features">
         <div className="section-inner">
-          <div className="section-label">功能亮点</div>
-          <h2 className="section-title">为效率而生的每一个细节</h2>
-          <p className="section-sub">从记录到追踪，每个功能都经过打磨，让任务管理不再繁琐。</p>
+          <div className="section-label">{t('landing.featuresLabel')}</div>
+          <h2 className="section-title">{t('landing.featuresTitle')}</h2>
+          <p className="section-sub">{t('landing.featuresSub')}</p>
           <div className="features-grid">
-            {FEATURES.map((f) => (
-              <div className="feature-card" key={f.title}>
+            {FEATURE_KEYS.map((f) => (
+              <div className="feature-card" key={f.key}>
                 <div className="feature-icon" style={{ color: f.color, background: f.bg }}>
                   {f.icon}
                 </div>
-                <div className="feature-title">{f.title}</div>
-                <div className="feature-desc">{f.desc}</div>
+                <div className="feature-title">{t(`landing.features.${f.key}.title`)}</div>
+                <div className="feature-desc">{t(`landing.features.${f.key}.desc`)}</div>
               </div>
             ))}
           </div>
@@ -203,15 +174,15 @@ export default function LandingPage() {
       {/* ─── How it works ─── */}
       <section className="landing-section landing-steps">
         <div className="section-inner">
-          <div className="section-label">使用流程</div>
-          <h2 className="section-title">三步开始你的高效工作</h2>
+          <div className="section-label">{t('landing.stepsLabel')}</div>
+          <h2 className="section-title">{t('landing.stepsTitle')}</h2>
           <div className="steps-row">
-            {STEPS.map((s, i) => (
-              <div className="step-card" key={s.num}>
-                <div className="step-num">{s.num}</div>
-                <div className="step-title">{s.title}</div>
-                <div className="step-desc">{s.desc}</div>
-                {i < STEPS.length - 1 && <div className="step-arrow">→</div>}
+            {STEP_KEYS.map((key, i) => (
+              <div className="step-card" key={key}>
+                <div className="step-num">{String(i + 1).padStart(2, '0')}</div>
+                <div className="step-title">{t(`landing.steps.${key}.title`)}</div>
+                <div className="step-desc">{t(`landing.steps.${key}.desc`)}</div>
+                {i < STEP_KEYS.length - 1 && <div className="step-arrow">→</div>}
               </div>
             ))}
           </div>
@@ -223,10 +194,10 @@ export default function LandingPage() {
         <div className="cta-orb cta-orb-1" />
         <div className="cta-orb cta-orb-2" />
         <div className="cta-inner">
-          <h2 className="cta-title">准备好了吗？</h2>
-          <p className="cta-sub">开始使用 OpenTodo，让每一项任务都有迹可循。</p>
+          <h2 className="cta-title">{t('landing.ctaTitle')}</h2>
+          <p className="cta-sub">{t('landing.ctaSub')}</p>
           <Button type="primary" size="large" className="cta-btn" onClick={goApp} icon={<ArrowRightOutlined />} iconPosition="end">
-            {user ? '进入应用' : '免费开始使用'}
+            {user ? t('landing.enterApp') : t('landing.ctaBtn')}
           </Button>
         </div>
       </section>
@@ -240,7 +211,7 @@ export default function LandingPage() {
             </div>
             <span>OpenTodo</span>
           </div>
-          <div className="footer-copy">© 2026 OpenTodo · 开源任务管理系统</div>
+          <div className="footer-copy">{t('landing.footerCopy')}</div>
         </div>
       </footer>
     </div>

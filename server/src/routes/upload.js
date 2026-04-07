@@ -74,7 +74,7 @@ router.post(
     const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
     const ext = (req.file.originalname.split('.').pop() || 'png').toLowerCase();
     if (!ALLOWED_EXTS.includes(ext)) {
-      return res.status(400).json({ message: '不支持的图片格式' });
+      return res.status(400).json({ message: req.t('upload.unsupportedFormat') });
     }
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 

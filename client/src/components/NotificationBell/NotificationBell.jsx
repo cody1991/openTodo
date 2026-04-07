@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge, Popover, List, Button, Empty, Typography, Space } from 'antd';
 import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { notificationApi } from '../../services/api';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -13,6 +14,7 @@ const { Text } = Typography;
 export default function NotificationBell({ unreadCount }) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data } = useQuery({
     queryKey: ['notifications', 'list'],
@@ -32,15 +34,15 @@ export default function NotificationBell({ unreadCount }) {
   const content = (
     <div style={{ width: 320, maxHeight: 400, overflow: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <Text strong>通知</Text>
+        <Text strong>{t('notifications.title')}</Text>
         {unreadCount > 0 && (
           <Button size="small" type="text" icon={<CheckOutlined />} onClick={() => markAllRead.mutate()}>
-            全部已读
+            {t('notifications.markAllRead')}
           </Button>
         )}
       </div>
       {notifications.length === 0 ? (
-        <Empty description="暂无通知" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty description={t('notifications.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <List
           dataSource={notifications}

@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "registrationClosed": "Registratie is gesloten. Neem contact op met een beheerder.",
+    "fieldsMissing": "Gebruikersnaam, e-mailadres en wachtwoord zijn allemaal verplicht.",
+    "passwordTooShort": "Wachtwoord moet minimaal 8 tekens bevatten.",
+    "invalidEmail": "Ongeldig e-mailformaat.",
+    "userExists": "Gebruikersnaam of e-mailadres is al geregistreerd.",
+    "roleNotInit": "Systeemrollen zijn niet geïnitialiseerd. Neem contact op met een beheerder.",
+    "registerSuccess": "Registratie geslaagd.",
+    "invalidWebhook": "Ongeldige Webhook URL. Alleen officiële WeCom-adressen worden ondersteund.",
+    "credentialsRequired": "Gebruikersnaam en wachtwoord zijn verplicht.",
+    "invalidCredentials": "Ongeldige gebruikersnaam of wachtwoord.",
+    "loginSuccess": "Inloggen geslaagd.",
+    "loggedOut": "Uitgelogd.",
+    "passwordsRequired": "Huidig en nieuw wachtwoord zijn beide verplicht.",
+    "newPasswordTooShort": "Nieuw wachtwoord moet minimaal 8 tekens bevatten.",
+    "currentPasswordWrong": "Huidig wachtwoord is onjuist.",
+    "passwordUpdated": "Wachtwoord bijgewerkt.",
+    "settingsUpdated": "Instellingen opgeslagen."
+  },
+  "todos": {
+    "invalidFormat": "Ongeldig gegevensformaat.",
+    "importSuccess": "Importeren geslaagd.",
+    "importFailed": "Importeren mislukt.",
+    "categoryInvalid": "Categorie bestaat niet of u heeft geen toegang.",
+    "tagsInvalid": "Een of meer tags bestaan niet of u heeft geen toegang."
+  },
+  "share": {
+    "notFound": "Deellink niet gevonden.",
+    "deleted": "Verwijderd.",
+    "expired": "Deze deellink is verlopen.",
+    "titleRequired": "Titel is verplicht.",
+    "invalidPriority": "Ongeldige prioriteit.",
+    "invalidCategory": "Ongeldige categorie.",
+    "invalidTags": "Ongeldige tags.",
+    "submitted": "Ingediend."
+  },
+  "shareRequests": {
+    "notFound": "Verzoek niet gevonden.",
+    "forbidden": "U heeft geen toestemming voor deze actie.",
+    "alreadyHandled": "Dit verzoek is al verwerkt."
+  },
+  "upload": {
+    "unsupportedFormat": "Niet-ondersteund afbeeldingsformaat."
+  },
+  "bookmarks": {
+    "maxDepth": "Maximaal twee niveaus van categorieën worden ondersteund."
+  }
+}

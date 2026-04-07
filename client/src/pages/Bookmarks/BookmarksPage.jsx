@@ -9,6 +9,7 @@ import {
   FolderOutlined, FolderOpenOutlined, GlobalOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { bookmarkApi, bookmarkCategoryApi } from '../../services/api';
 import './BookmarksPage.css';
 
@@ -28,16 +29,14 @@ function getDomain(url) {
   catch { return url; }
 }
 
-// ─── Category Modal ────────────────────────────────────────
 function CategoryModal({ open, onClose, categories, editingCat }) {
   const [form] = Form.useForm();
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [color, setColor] = useState('#6366f1');
-  // Only root cats can be parents, and exclude the category being edited itself
   const rootCats = categories.filter((c) => !c.parent_id && c.id !== editingCat?.id);
 
   const catColor = editingCat?.color || '#6366f1';
-  // sync color when modal opens with a different category
   if (color !== catColor && open) setColor(catColor);
 
   const saveMutation = useMutation({
@@ -46,17 +45,22 @@ function CategoryModal({ open, onClose, categories, editingCat }) {
         ? bookmarkCategoryApi.update(editingCat.id, vals)
         : bookmarkCategoryApi.create(vals),
     onSuccess: () => {
-      message.success(editingCat ? '分类已更新' : '分类已创建');
+      message.success(editingCat ? t('bookmarks.categoryUpdated') : t('bookmarks.categoryCreated'));
       qc.invalidateQueries({ queryKey: ['bookmark-categories'] });
       onClose();
     },
-    onError: (e) => message.error(e.message || '操作失败'),
+    onError: (e) => message.error(e.message || t('bookmarks.operationFailed')),
   });
 
   return (
-    <Modal title={editingCat ? '编辑分类' : '新建分类'} open={open}
-      onCancel={onClose} onOk={() => form.submit()}
-      okText={editingCat ? '保存' : '创建'} destroyOnClose>
+    <Modal
+      title={editingCat ? t('bookmarks.editCategory') : t('bookmarks.newCategoryTitle')}
+      open={open}
+      onCancel={onClose}
+      onOk={() => form.submit()}
+      okText={editingCat ? t('bookmarks.saveOk') : t('bookmarks.createOk')}
+      destroyOnClose
+    >
       <Form
         form={form}
         layout="vertical"
@@ -67,11 +71,13 @@ function CategoryModal({ open, onClose, categories, editingCat }) {
         }}
         onFinish={(v) => saveMutation.mutate({ ...v, color })}
       >
-        <Form.Item name="name" label="分类名称" rules={[{ required: true, message: '请输入名称' }]}>
-          <Input placeholder="例：工具、学习资源" />
+        <Form.Item name="name" label={t('bookmarks.categoryName')} rules={[{ required: true, message: t('bookmarks.categoryNameRequired') }]}>
+          <Input placeholder={t('bookmarks.categoryNamePlaceholder')} />
         </Form.Item>
-        <Form.Item name="parent_id" label="父分类（选择后为二级分类）">
-          <Select placeholder="不选则为一级分类" allowClear
+        <Form.Item name="parent_id" label={t('bookmarks.parentCategory')}>
+          <Select
+            placeholder={t('bookmarks.parentCategoryPlaceholder')}
+            allowClear
             options={rootCats.map((c) => ({
               value: c.id,
               label: (
@@ -80,9 +86,10 @@ function CategoryModal({ open, onClose, categories, editingCat }) {
                   {c.name}
                 </span>
               ),
-            }))} />
+            }))}
+          />
         </Form.Item>
-        <Form.Item label="颜色">
+        <Form.Item label={t('bookmarks.color')}>
           <div className="color-picker-row">
             {COLOR_PRESETS.map((c) => (
               <div key={c} className={`color-swatch ${color === c ? 'active' : ''}`}
@@ -95,15 +102,14 @@ function CategoryModal({ open, onClose, categories, editingCat }) {
   );
 }
 
-// ─── Bookmark Modal ────────────────────────────────────────
 function BookmarkModal({ open, onClose, categories, editingBm }) {
   const [form] = Form.useForm();
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
 
   const bmTags = editingBm?.tags || [];
-  // sync tags when modal opens with a different bookmark
   if (open && JSON.stringify(tags) !== JSON.stringify(bmTags)) setTags(bmTags);
 
   const saveMutation = useMutation({
@@ -113,20 +119,19 @@ function BookmarkModal({ open, onClose, categories, editingBm }) {
       return editingBm ? bookmarkApi.update(editingBm.id, payload) : bookmarkApi.create(payload);
     },
     onSuccess: () => {
-      message.success(editingBm ? '书签已更新' : '书签已添加');
+      message.success(editingBm ? t('bookmarks.bookmarkUpdated') : t('bookmarks.bookmarkAdded'));
       qc.invalidateQueries({ queryKey: ['bookmarks'] });
       onClose();
     },
-    onError: (e) => message.error(e.message || '操作失败'),
+    onError: (e) => message.error(e.message || t('bookmarks.operationFailed')),
   });
 
   const addTag = () => {
-    const t = tagInput.trim();
-    if (t && !tags.includes(t)) setTags([...tags, t]);
+    const tag = tagInput.trim();
+    if (tag && !tags.includes(tag)) setTags([...tags, tag]);
     setTagInput('');
   };
 
-  // Build grouped options showing hierarchy
   const catOptions = useMemo(() => {
     const roots = categories.filter((c) => !c.parent_id);
     return roots.flatMap((root) => {
@@ -140,9 +145,15 @@ function BookmarkModal({ open, onClose, categories, editingBm }) {
   }, [categories]);
 
   return (
-    <Modal title={editingBm ? '编辑书签' : '添加书签'} open={open}
-      onCancel={onClose} onOk={() => form.submit()}
-      okText={editingBm ? '保存' : '添加'} width={520} destroyOnClose>
+    <Modal
+      title={editingBm ? t('bookmarks.editBookmark') : t('bookmarks.addBookmarkTitle')}
+      open={open}
+      onCancel={onClose}
+      onOk={() => form.submit()}
+      okText={editingBm ? t('bookmarks.saveOk') : t('bookmarks.createOk')}
+      width={520}
+      destroyOnClose
+    >
       <Form
         form={form}
         layout="vertical"
@@ -155,30 +166,34 @@ function BookmarkModal({ open, onClose, categories, editingBm }) {
         }}
         onFinish={(v) => saveMutation.mutate(v)}
       >
-        <Form.Item name="url" label="网址" rules={[{ required: true, message: '请输入网址' }]}>
+        <Form.Item name="url" label={t('bookmarks.urlLabel')} rules={[{ required: true, message: t('bookmarks.urlRequired') }]}>
           <Input prefix={<LinkOutlined />} placeholder="https://example.com" />
         </Form.Item>
-        <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-          <Input placeholder="网站标题" />
+        <Form.Item name="title" label={t('bookmarks.titleLabel')} rules={[{ required: true, message: t('bookmarks.titleRequired') }]}>
+          <Input placeholder={t('bookmarks.titlePlaceholder')} />
         </Form.Item>
-        <Form.Item name="description" label="描述">
-          <Input.TextArea placeholder="一句话描述这个网站…" rows={2} />
+        <Form.Item name="description" label={t('bookmarks.descriptionLabel')}>
+          <Input.TextArea placeholder={t('bookmarks.descriptionPlaceholder')} rows={2} />
         </Form.Item>
-        <Form.Item name="category_id" label="分类">
-          <Select placeholder="选择分类" allowClear options={catOptions} />
+        <Form.Item name="category_id" label={t('bookmarks.categoryLabel')}>
+          <Select placeholder={t('bookmarks.categoryPlaceholder')} allowClear options={catOptions} />
         </Form.Item>
-        <Form.Item label="标签">
+        <Form.Item label={t('bookmarks.tagsLabel')}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            <Input placeholder="输入标签后回车" value={tagInput}
+            <Input
+              placeholder={t('bookmarks.tagsPlaceholder')}
+              value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              onPressEnter={addTag} style={{ flex: 1 }} />
-            <Button onClick={addTag}>添加</Button>
+              onPressEnter={addTag}
+              style={{ flex: 1 }}
+            />
+            <Button onClick={addTag}>{t('bookmarks.addTagBtn')}</Button>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-            {tags.map((t) => (
-              <span key={t} className="bm-tag" style={{ cursor: 'default' }}>
-                {t}
-                <span className="bm-tag-close" onClick={() => setTags(tags.filter((x) => x !== t))}>×</span>
+            {tags.map((tag) => (
+              <span key={tag} className="bm-tag" style={{ cursor: 'default' }}>
+                {tag}
+                <span className="bm-tag-close" onClick={() => setTags(tags.filter((x) => x !== tag))}>×</span>
               </span>
             ))}
           </div>
@@ -188,12 +203,11 @@ function BookmarkModal({ open, onClose, categories, editingBm }) {
   );
 }
 
-// ─── Bookmark Card ─────────────────────────────────────────
 function BookmarkCard({ bm, categories, onEdit, onDelete, onTogglePin }) {
   const [imgError, setImgError] = useState(false);
+  const { t } = useTranslation();
   const favicon = bm.favicon || getFavicon(bm.url);
 
-  // Build breadcrumb: ParentCat > SubCat  or just Cat
   const cat = categories.find((c) => c.id === bm.category_id);
   const parentCat = cat?.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
   const catLabel = parentCat ? `${parentCat.name} › ${cat.name}` : cat?.name;
@@ -208,14 +222,19 @@ function BookmarkCard({ bm, categories, onEdit, onDelete, onTogglePin }) {
             : <GlobalOutlined style={{ fontSize: 20, color: '#9ca3af' }} />}
         </div>
         <div className="bm-card-actions">
-          <Tooltip title={bm.is_pinned ? '取消置顶' : '置顶'}>
+          <Tooltip title={bm.is_pinned ? t('bookmarks.unpin') : t('bookmarks.pin')}>
             <Button type="text" size="small"
               icon={bm.is_pinned ? <PushpinFilled style={{ color: '#6366f1' }} /> : <PushpinOutlined />}
               onClick={() => onTogglePin(bm)} />
           </Tooltip>
           <Button type="text" size="small" icon={<EditOutlined />} onClick={() => onEdit(bm)} />
-          <Popconfirm title="确定删除这个书签？" onConfirm={() => onDelete(bm.id)}
-            okText="删除" cancelText="取消" okButtonProps={{ danger: true }}>
+          <Popconfirm
+            title={t('bookmarks.deleteConfirm')}
+            onConfirm={() => onDelete(bm.id)}
+            okText={t('bookmarks.deleteOk')}
+            cancelText={t('bookmarks.deleteCancel')}
+            okButtonProps={{ danger: true }}
+          >
             <Button type="text" size="small" icon={<DeleteOutlined />} danger />
           </Popconfirm>
         </div>
@@ -233,17 +252,17 @@ function BookmarkCard({ bm, categories, onEdit, onDelete, onTogglePin }) {
             {catLabel}
           </span>
         )}
-        {bm.tags?.map((t) => (
-          <span key={t} className="bm-tag">{t}</span>
+        {bm.tags?.map((tag) => (
+          <span key={tag} className="bm-tag">{tag}</span>
         ))}
       </div>
     </div>
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────
 export default function BookmarksPage() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [activeCatId, setActiveCatId] = useState(null);
   const [bmModalOpen, setBmModalOpen] = useState(false);
@@ -256,7 +275,6 @@ export default function BookmarksPage() {
     queryFn: bookmarkCategoryApi.list,
   });
 
-  // Always fetch all bookmarks, filter client-side
   const { data: bmData, isLoading: bmsLoading } = useQuery({
     queryKey: ['bookmarks'],
     queryFn: () => bookmarkApi.list({}),
@@ -265,9 +283,8 @@ export default function BookmarksPage() {
   const categories = useMemo(() => catData?.categories || [], [catData]);
   const allBookmarks = useMemo(() => bmData?.bookmarks || [], [bmData]);
 
-  // Compute which category IDs are "selected" (includes children when root selected)
   const selectedIds = useMemo(() => {
-    if (activeCatId === null) return null; // null means all
+    if (activeCatId === null) return null;
     const children = categories.filter((c) => c.parent_id === activeCatId).map((c) => c.id);
     return new Set([activeCatId, ...children]);
   }, [activeCatId, categories]);
@@ -288,7 +305,6 @@ export default function BookmarksPage() {
 
   const rootCats = categories.filter((c) => !c.parent_id);
 
-  // Count per category from all bookmarks
   const allCountMap = useMemo(() => {
     const map = {};
     allBookmarks.forEach((bm) => {
@@ -297,10 +313,9 @@ export default function BookmarksPage() {
     return map;
   }, [allBookmarks]);
 
-
   const deleteMutation = useMutation({
     mutationFn: bookmarkApi.delete,
-    onSuccess: () => { message.success('已删除'); qc.invalidateQueries({ queryKey: ['bookmarks'] }); },
+    onSuccess: () => { message.success(t('bookmarks.deleted')); qc.invalidateQueries({ queryKey: ['bookmarks'] }); },
   });
 
   const pinMutation = useMutation({
@@ -311,7 +326,7 @@ export default function BookmarksPage() {
   const deleteCatMutation = useMutation({
     mutationFn: bookmarkCategoryApi.delete,
     onSuccess: () => {
-      message.success('分类已删除');
+      message.success(t('bookmarks.categoryDeleted'));
       qc.invalidateQueries({ queryKey: ['bookmark-categories'] });
       if (activeCatId !== null) setActiveCatId(null);
     },
@@ -322,16 +337,16 @@ export default function BookmarksPage() {
   const openAddCat = () => { setEditingCat(null); setCatModalOpen(true); };
   const openEditCat = (cat) => { setEditingCat(cat); setCatModalOpen(true); };
 
-  const activeCatName = activeCatId === null ? '全部书签'
-    : categories.find((c) => c.id === activeCatId)?.name || '书签';
+  const activeCatName = activeCatId === null
+    ? t('bookmarks.allBookmarks')
+    : categories.find((c) => c.id === activeCatId)?.name || t('bookmarks.allBookmarks');
 
   return (
     <div className="bookmarks-page">
-      {/* ─── Sidebar ─── */}
       <aside className="bm-sidebar">
         <div className="bm-sidebar-header">
-          <span className="bm-sidebar-title">书签分类</span>
-          <Tooltip title="新建分类">
+          <span className="bm-sidebar-title">{t('bookmarks.title')}</span>
+          <Tooltip title={t('bookmarks.newCategory')}>
             <Button type="text" size="small" icon={<PlusOutlined />} onClick={openAddCat} />
           </Tooltip>
         </div>
@@ -340,14 +355,14 @@ export default function BookmarksPage() {
           <div className={`bm-cat-item root ${activeCatId === null ? 'active' : ''}`}
             onClick={() => setActiveCatId(null)}>
             <GlobalOutlined className="bm-cat-icon" />
-            <span className="bm-cat-name">全部书签</span>
+            <span className="bm-cat-name">{t('bookmarks.allBookmarks')}</span>
             <span className="bm-cat-count">{allBookmarks.length || ''}</span>
           </div>
 
           {catsLoading ? (
             <div style={{ padding: '12px', textAlign: 'center' }}><Spin size="small" /></div>
           ) : rootCats.length === 0 ? (
-            <div className="bm-cat-empty">暂无分类，点击 + 新建</div>
+            <div className="bm-cat-empty">{t('bookmarks.emptyCategories')}</div>
           ) : rootCats.map((root) => {
             const children = categories.filter((c) => c.parent_id === root.id);
             const rootDirect = allCountMap[root.id] || 0;
@@ -366,9 +381,13 @@ export default function BookmarksPage() {
                   {total > 0 && <span className="bm-cat-count">{total}</span>}
                   <div className="bm-cat-ops" onClick={(e) => e.stopPropagation()}>
                     <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openEditCat(root)} />
-                    <Popconfirm title="删除此分类？子分类也会一起删除。"
+                    <Popconfirm
+                      title={t('bookmarks.deleteCategoryConfirm')}
                       onConfirm={() => deleteCatMutation.mutate(root.id)}
-                      okText="删除" cancelText="取消" okButtonProps={{ danger: true }}>
+                      okText={t('bookmarks.deleteOk')}
+                      cancelText={t('bookmarks.deleteCancel')}
+                      okButtonProps={{ danger: true }}
+                    >
                       <Button type="text" size="small" icon={<DeleteOutlined />} danger />
                     </Popconfirm>
                   </div>
@@ -384,9 +403,13 @@ export default function BookmarksPage() {
                     {allCountMap[child.id] > 0 && <span className="bm-cat-count">{allCountMap[child.id]}</span>}
                     <div className="bm-cat-ops" onClick={(e) => e.stopPropagation()}>
                       <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openEditCat(child)} />
-                      <Popconfirm title="删除此子分类？"
+                      <Popconfirm
+                        title={t('bookmarks.deleteSubCategoryConfirm')}
                         onConfirm={() => deleteCatMutation.mutate(child.id)}
-                        okText="删除" cancelText="取消" okButtonProps={{ danger: true }}>
+                        okText={t('bookmarks.deleteOk')}
+                        cancelText={t('bookmarks.deleteCancel')}
+                        okButtonProps={{ danger: true }}
+                      >
                         <Button type="text" size="small" icon={<DeleteOutlined />} danger />
                       </Popconfirm>
                     </div>
@@ -398,20 +421,28 @@ export default function BookmarksPage() {
         </div>
       </aside>
 
-      {/* ─── Main ─── */}
       <main className="bm-main">
         <div className="bm-topbar">
           <div className="bm-topbar-left">
             <h2 className="bm-page-title">{activeCatName}</h2>
-            <span className="bm-count-badge">{bookmarks.length} 个</span>
+            <span className="bm-count-badge">{t('bookmarks.count', { count: bookmarks.length })}</span>
           </div>
           <Space>
-            <Input prefix={<SearchOutlined />} placeholder="搜索书签…"
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              allowClear style={{ width: 220 }} />
-            <Button type="primary" icon={<PlusOutlined />} onClick={openAddBm}
-              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none' }}>
-              添加书签
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder={t('bookmarks.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              allowClear
+              style={{ width: 220 }}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={openAddBm}
+              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none' }}
+            >
+              {t('bookmarks.addBookmark')}
             </Button>
           </Space>
         </div>
@@ -420,8 +451,12 @@ export default function BookmarksPage() {
           <div className="bm-loading"><Spin size="large" /></div>
         ) : bookmarks.length === 0 ? (
           <div className="bm-empty">
-            <Empty description={search ? '没有找到匹配的书签' : '还没有书签，点击右上角添加吧'}>
-              {!search && <Button type="primary" icon={<PlusOutlined />} onClick={openAddBm}>添加第一个书签</Button>}
+            <Empty description={search ? t('bookmarks.notFound') : t('bookmarks.emptyBookmarks')}>
+              {!search && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={openAddBm}>
+                  {t('bookmarks.addFirstBookmark')}
+                </Button>
+              )}
             </Empty>
           </div>
         ) : (

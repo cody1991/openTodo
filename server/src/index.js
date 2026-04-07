@@ -26,6 +26,8 @@ const shareRoutes = require('./routes/share');
 const publicShareRoutes = require('./routes/publicShare');
 const shareRequestsRoutes = require('./routes/shareRequests');
 
+const langMiddleware = require('./middleware/lang');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -38,6 +40,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(langMiddleware);
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -80,7 +83,7 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ message: err.message });
   }
   console.error('[Server] Unhandled error:', err);
-  res.status(500).json({ message: '服务器内部错误' });
+  res.status(500).json({ message: 'Internal server error' });
 });
 
 app.listen(PORT, () => {

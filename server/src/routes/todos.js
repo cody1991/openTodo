@@ -144,7 +144,7 @@ router.post('/import', (req, res) => {
   const { categories = [], tags = [], todos = [], todo_tags = [] } = req.body;
 
   if (!Array.isArray(todos) || !Array.isArray(categories) || !Array.isArray(tags)) {
-    return res.status(400).json({ message: '数据格式错误' });
+    return res.status(400).json({ message: req.t('todos.invalidFormat') });
   }
 
   const importFn = db.transaction(() => {
@@ -230,10 +230,10 @@ router.post('/import', (req, res) => {
 
   try {
     const result = importFn();
-    res.json({ message: '导入成功', ...result });
+    res.json({ message: req.t('todos.importSuccess'), ...result });
   } catch (e) {
     console.error('Import error:', e);
-    res.status(500).json({ message: '导入失败: ' + e.message });
+    res.status(500).json({ message: req.t('todos.importFailed') + ': ' + e.message });
   }
 });
 
@@ -268,7 +268,7 @@ router.post('/', (req, res) => {
     });
     res.status(201).json({ todo });
   } catch (e) {
-    if (e.statusCode) return res.status(e.statusCode).json({ message: e.message });
+    if (e.statusCode) return res.status(e.statusCode).json({ message: e.i18nKey ? req.t(e.i18nKey) : e.message });
     throw e;
   }
 });
@@ -282,10 +282,10 @@ router.put('/:id', (req, res) => {
   const { title, content, category_id, priority, due_date, status, tag_ids, notify_enabled } = req.body;
 
   if (category_id !== undefined && !validateCategoryOwnership(category_id, req.user.id)) {
-    return res.status(400).json({ message: '分类不存在或无权使用' });
+    return res.status(400).json({ message: req.t('todos.categoryInvalid') });
   }
   if (tag_ids !== undefined && !validateTagsOwnership(tag_ids, req.user.id)) {
-    return res.status(400).json({ message: '标签不存在或无权使用' });
+    return res.status(400).json({ message: req.t('todos.tagsInvalid') });
   }
 
   const setClauses = [];

@@ -7,6 +7,7 @@ import {
   PlusOutlined, EditOutlined, DeleteOutlined, TagsOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { tagApi } from '../../services/api';
 import './TagsPage.css';
 
@@ -20,6 +21,7 @@ const PRESET_COLORS = [
 
 export default function TagsPage() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
   const [form] = Form.useForm();
@@ -34,30 +36,30 @@ export default function TagsPage() {
   const createMutation = useMutation({
     mutationFn: tagApi.create,
     onSuccess: () => {
-      message.success('标签创建成功');
+      message.success(t('tags.createSuccess'));
       queryClient.invalidateQueries({ queryKey: ['tags'] });
       closeModal();
     },
-    onError: (e) => message.error(e.message || '创建失败'),
+    onError: (e) => message.error(e.message || t('tags.createFailed')),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => tagApi.update(id, data),
     onSuccess: () => {
-      message.success('标签更新成功');
+      message.success(t('tags.updateSuccess'));
       queryClient.invalidateQueries({ queryKey: ['tags'] });
       closeModal();
     },
-    onError: (e) => message.error(e.message || '更新失败'),
+    onError: (e) => message.error(e.message || t('tags.updateFailed')),
   });
 
   const deleteMutation = useMutation({
     mutationFn: tagApi.delete,
     onSuccess: () => {
-      message.success('标签已删除');
+      message.success(t('tags.deleteSuccess'));
       queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
-    onError: (e) => message.error(e.message || '删除失败'),
+    onError: (e) => message.error(e.message || t('tags.deleteFailed')),
   });
 
   function openCreate() {
@@ -90,8 +92,8 @@ export default function TagsPage() {
     }
   }
 
-  const filtered = tags.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = tags.filter((tag) =>
+    tag.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -99,18 +101,18 @@ export default function TagsPage() {
       <div className="tags-page-header">
         <Title level={3} style={{ color: '#e2e8f0', margin: 0 }}>
           <TagsOutlined style={{ marginRight: 8 }} />
-          <span className="gradient-text">标签管理</span>
+          <span className="gradient-text">{t('tags.title')}</span>
         </Title>
         <Space>
           <Input
-            placeholder="搜索标签…"
+            placeholder={t('tags.search')}
             allowClear
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: 180 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            新建标签
+            {t('tags.newTag')}
           </Button>
         </Space>
       </div>
@@ -124,7 +126,7 @@ export default function TagsPage() {
           <Empty
             description={
               <Text style={{ color: '#94a3b8' }}>
-                {search ? '未找到匹配的标签' : '还没有标签，点击「新建标签」开始吧'}
+                {search ? t('tags.notFound') : t('tags.empty')}
               </Text>
             }
           />
@@ -151,7 +153,7 @@ export default function TagsPage() {
                     {tag.name}
                   </Tag>
                   <Space size={4}>
-                    <Tooltip title="编辑">
+                    <Tooltip title={t('tags.editTooltip')}>
                       <Button
                         type="text"
                         size="small"
@@ -161,14 +163,14 @@ export default function TagsPage() {
                       />
                     </Tooltip>
                     <Popconfirm
-                      title="确认删除这个标签？"
-                      description="删除后，已关联该标签的 TODO 将同步移除此标签。"
-                      okText="删除"
-                      cancelText="取消"
+                      title={t('tags.confirmDelete')}
+                      description={t('tags.deleteDescription')}
+                      okText={t('tags.okText')}
+                      cancelText={t('tags.cancelText')}
                       okButtonProps={{ danger: true }}
                       onConfirm={() => deleteMutation.mutate(tag.id)}
                     >
-                      <Tooltip title="删除">
+                      <Tooltip title={t('tags.deleteTooltip')}>
                         <Button
                           type="text"
                           size="small"
@@ -189,7 +191,7 @@ export default function TagsPage() {
       <Modal
         title={
           <span style={{ color: '#e2e8f0' }}>
-            {editingTag ? '编辑标签' : '新建标签'}
+            {editingTag ? t('tags.editTitle') : t('tags.createTitle')}
           </span>
         }
         open={modalOpen}
@@ -200,19 +202,22 @@ export default function TagsPage() {
         <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
           <Form.Item
             name="name"
-            label={<span style={{ color: '#94a3b8' }}>标签名称</span>}
-            rules={[{ required: true, message: '请输入标签名称' }, { max: 20, message: '最多 20 个字符' }]}
+            label={<span style={{ color: '#94a3b8' }}>{t('tags.nameLabel')}</span>}
+            rules={[
+              { required: true, message: t('tags.nameRequired') },
+              { max: 20, message: t('tags.nameMaxLength') },
+            ]}
           >
-            <Input placeholder="输入标签名称" maxLength={20} showCount />
+            <Input placeholder={t('tags.namePlaceholder')} maxLength={20} showCount />
           </Form.Item>
 
           <Form.Item
             name="color"
-            label={<span style={{ color: '#94a3b8' }}>标签颜色</span>}
-            rules={[{ required: true, message: '请选择颜色' }]}
+            label={<span style={{ color: '#94a3b8' }}>{t('tags.colorLabel')}</span>}
+            rules={[{ required: true, message: t('tags.colorRequired') }]}
           >
             <ColorPicker
-              presets={[{ label: '预设颜色', colors: PRESET_COLORS }]}
+              presets={[{ label: t('tags.colorPresets'), colors: PRESET_COLORS }]}
               showText
               format="hex"
             />
@@ -227,7 +232,7 @@ export default function TagsPage() {
                   : getFieldValue('color')?.toHexString?.() || '#1677ff';
               return name ? (
                 <div style={{ marginBottom: 16 }}>
-                  <Text style={{ color: '#94a3b8', fontSize: 12 }}>预览：</Text>
+                  <Text style={{ color: '#94a3b8', fontSize: 12 }}>{t('tags.preview')}</Text>
                   <br />
                   <Tag
                     style={{
@@ -248,13 +253,13 @@ export default function TagsPage() {
           </Form.Item>
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button onClick={closeModal}>取消</Button>
+            <Button onClick={closeModal}>{t('common.cancel')}</Button>
             <Button
               type="primary"
               htmlType="submit"
               loading={createMutation.isPending || updateMutation.isPending}
             >
-              {editingTag ? '保存' : '创建'}
+              {editingTag ? t('common.save') : t('common.create')}
             </Button>
           </div>
         </Form>

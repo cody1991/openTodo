@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "registrationClosed": "目前不開放註冊，請聯絡管理員",
+    "fieldsMissing": "使用者名稱、電子郵件和密碼均為必填項",
+    "passwordTooShort": "密碼長度不能少於 8 位",
+    "invalidEmail": "電子郵件格式不正確",
+    "userExists": "使用者名稱或電子郵件已被註冊",
+    "roleNotInit": "系統角色未初始化，請聯絡管理員",
+    "registerSuccess": "註冊成功",
+    "invalidWebhook": "Webhook URL 不合法，僅支援企業微信官方地址",
+    "credentialsRequired": "使用者名稱和密碼為必填項",
+    "invalidCredentials": "使用者名稱或密碼錯誤",
+    "loginSuccess": "登入成功",
+    "loggedOut": "已退出登入",
+    "passwordsRequired": "請填寫目前密碼和新密碼",
+    "newPasswordTooShort": "新密碼長度不能少於 8 位",
+    "currentPasswordWrong": "目前密碼不正確",
+    "passwordUpdated": "密碼已修改",
+    "settingsUpdated": "設定已儲存"
+  },
+  "todos": {
+    "invalidFormat": "資料格式錯誤",
+    "importSuccess": "匯入成功",
+    "importFailed": "匯入失敗",
+    "categoryInvalid": "分類不存在或無權使用",
+    "tagsInvalid": "標籤不存在或無權使用"
+  },
+  "share": {
+    "notFound": "分享連結不存在",
+    "deleted": "已刪除",
+    "expired": "該分享連結已過期",
+    "titleRequired": "請填寫標題",
+    "invalidPriority": "無效的優先級",
+    "invalidCategory": "分類無效",
+    "invalidTags": "標籤無效",
+    "submitted": "已提交"
+  },
+  "shareRequests": {
+    "notFound": "需求不存在",
+    "forbidden": "無權操作",
+    "alreadyHandled": "該需求已處理"
+  },
+  "upload": {
+    "unsupportedFormat": "不支援的圖片格式"
+  },
+  "bookmarks": {
+    "maxDepth": "最多支援兩級分類"
+  }
+}

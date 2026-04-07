@@ -6,6 +6,7 @@ import {
   ClockCircleOutlined, FireOutlined, ThunderboltOutlined,
   PlayCircleOutlined, UndoOutlined, SwapOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { Viewer } from '@bytemd/react';
 import useAuthStore from '../../stores/authStore';
@@ -16,22 +17,23 @@ import highlight from '@bytemd/plugin-highlight';
 const { Text } = Typography;
 const plugins = [gfm(), highlight()];
 
-const PRIORITY_CONFIG = {
-  urgent: { color: '#ef4444', label: '紧急', icon: <FireOutlined />,        cls: 'priority-urgent urgent-pulse' },
-  high:   { color: '#f97316', label: '高',   icon: <ThunderboltOutlined />, cls: 'priority-high' },
-  medium: { color: '#eab308', label: '中',   icon: <ClockCircleOutlined />, cls: 'priority-medium' },
-  low:    { color: '#22c55e', label: '低',   icon: null,                   cls: 'priority-low' },
-};
-
-const STATUS_CONFIG = {
-  pending:     { color: 'default',    label: '待处理' },
-  in_progress: { color: 'processing', label: '进行中' },
-  completed:   { color: 'success',    label: '已完成' },
-};
-
 export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compact = false }) {
   const [expanded, setExpanded] = useState(true);
   const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
+  const { t } = useTranslation();
+
+  const PRIORITY_CONFIG = {
+    urgent: { color: '#ef4444', label: t('todoCard.urgent'), icon: <FireOutlined />,        cls: 'priority-urgent urgent-pulse' },
+    high:   { color: '#f97316', label: t('todoCard.high'),   icon: <ThunderboltOutlined />, cls: 'priority-high' },
+    medium: { color: '#eab308', label: t('todoCard.medium'), icon: <ClockCircleOutlined />, cls: 'priority-medium' },
+    low:    { color: '#22c55e', label: t('todoCard.low'),    icon: null,                   cls: 'priority-low' },
+  };
+
+  const STATUS_CONFIG = {
+    pending:     { color: 'default',    label: t('todoCard.pending') },
+    in_progress: { color: 'processing', label: t('todoCard.inProgress') },
+    completed:   { color: 'success',    label: t('todoCard.completed') },
+  };
 
   const priority   = PRIORITY_CONFIG[todo.priority] || PRIORITY_CONFIG.medium;
   const status     = STATUS_CONFIG[todo.status]     || STATUS_CONFIG.pending;
@@ -42,15 +44,15 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
   const isDueToday  = dueDayjs && dueDayjs.isSame(nowInTz, 'day') && !isCompleted;
 
   const menuItems = [
-    { key: 'edit', icon: <EditOutlined />, label: '编辑', onClick: () => onEdit(todo) },
+    { key: 'edit', icon: <EditOutlined />, label: t('todoCard.edit'), onClick: () => onEdit(todo) },
     ...(todo.status !== 'pending'
-      ? [{ key: 'reset', icon: <UndoOutlined />, label: '重置为待处理', onClick: () => onStatusChange(todo.id, 'pending') }]
+      ? [{ key: 'reset', icon: <UndoOutlined />, label: t('todoCard.resetToPending'), onClick: () => onStatusChange(todo.id, 'pending') }]
       : []),
     ...(todo.status !== 'in_progress'
-      ? [{ key: 'progress', icon: <PlayCircleOutlined />, label: '标为进行中', onClick: () => onStatusChange(todo.id, 'in_progress') }]
+      ? [{ key: 'progress', icon: <PlayCircleOutlined />, label: t('todoCard.markInProgress'), onClick: () => onStatusChange(todo.id, 'in_progress') }]
       : []),
     { type: 'divider' },
-    { key: 'delete', icon: <DeleteOutlined />, label: '删除', danger: true, onClick: () => onDelete(todo.id) },
+    { key: 'delete', icon: <DeleteOutlined />, label: t('todoCard.delete'), danger: true, onClick: () => onDelete(todo.id) },
   ];
 
   return (
@@ -69,7 +71,7 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
             e.stopPropagation();
             onStatusChange(todo.id, isCompleted ? 'pending' : 'completed');
           }}
-          title={isCompleted ? '标为未完成' : '标为完成'}
+          title={isCompleted ? t('todoCard.markIncomplete') : t('todoCard.markComplete')}
           icon={isCompleted ? <CheckOutlined style={{ color: '#22c55e', fontSize: 11 }} /> : null}
         />
 
@@ -77,7 +79,7 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
         <div
           className="todo-title-area"
           onClick={() => onEdit(todo)}
-          title="点击编辑"
+          title={t('todoCard.clickToEdit')}
         >
           <Text
             strong
@@ -133,7 +135,7 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
             <span
               style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3 }}
               onClick={(e) => e.stopPropagation()}
-              title="点击切换状态"
+              title={t('todoCard.switchStatus')}
             >
               <Badge status={status.color} text={<span style={{ fontSize: 11, color: '#9ca3af' }}>{status.label}</span>} />
               <SwapOutlined style={{ fontSize: 9, color: '#c0c4cc' }} />
@@ -159,9 +161,9 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
               <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : isDueToday ? '#f59e0b' : '#9ca3af' }}>
                 <ClockCircleOutlined style={{ marginRight: 3 }} />
                 {isOverdue
-                  ? `逾期 ${nowInTz.diff(dueDayjs, 'day')} 天`
+                  ? t('todoCard.overdue', { days: nowInTz.diff(dueDayjs, 'day') })
                   : isDueToday
-                  ? '今天截止'
+                  ? t('todoCard.dueToday')
                   : dueDayjs.format('M/D')}
               </span>
             </Tooltip>
@@ -198,7 +200,7 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
                 onClick={() => setExpanded(false)}
                 style={{ padding: 0, marginTop: 4, fontSize: 12 }}
               >
-                收起
+                {t('todoCard.collapse')}
               </Button>
             </>
           ) : (
@@ -208,7 +210,7 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
               onClick={() => setExpanded(true)}
               style={{ padding: 0, fontSize: 12 }}
             >
-              展开内容
+              {t('todoCard.expand')}
             </Button>
           )}
         </div>

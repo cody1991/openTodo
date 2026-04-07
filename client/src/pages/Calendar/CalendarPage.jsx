@@ -6,11 +6,13 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { Typography, Modal, Space, Button, Spin } from 'antd';
 import { PlusOutlined, FireOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { statsApi, todoApi } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 import { toUserTz } from '../../utils/date';
 import TodoEditor from '../../components/TodoEditor/TodoEditor';
+import i18n from '../../i18n';
 import './CalendarPage.css';
 
 const { Text, Title } = Typography;
@@ -22,15 +24,27 @@ const PRIORITY_COLORS = {
   low: '#22c55e',
 };
 
+// Map i18n language to FullCalendar locale
+const FC_LOCALE_MAP = {
+  'zh-CN': 'zh-cn',
+  'zh-TW': 'zh-tw',
+  'en':    'en',
+  'ja':    'ja',
+  'nl':    'nl',
+};
+
 export default function CalendarPage() {
   const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [defaultDate, setDefaultDate] = useState(null);
   const [viewRange, setViewRange] = useState(null);
-  const [moreModal, setMoreModal] = useState(null); // { date, events }
+  const [moreModal, setMoreModal] = useState(null);
   const calRef = useRef(null);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const fcLocale = FC_LOCALE_MAP[i18n.language] || 'zh-cn';
 
   const { data, isLoading } = useQuery({
     queryKey: ['stats', 'calendar', viewRange],
@@ -85,10 +99,17 @@ export default function CalendarPage() {
 
   const handleMoreLinkClick = ({ date, allSegs }) => {
     setMoreModal({
-      date: dayjs(date).format('YYYY年M月D日'),
+      date: dayjs(date).format(t('common.dateFormat')),
       events: allSegs.map((s) => s.event),
     });
     return 'stop';
+  };
+
+  const priorityLabels = {
+    urgent: t('calendar.priority.urgent'),
+    high:   t('calendar.priority.high'),
+    medium: t('calendar.priority.medium'),
+    low:    t('calendar.priority.low'),
   };
 
   const isMobile = window.innerWidth < 768;
@@ -97,7 +118,7 @@ export default function CalendarPage() {
     <div className="calendar-page fade-in">
       <div className="calendar-header">
         <Title level={3} style={{ margin: 0, color: '#e2e8f0' }}>
-          <span className="gradient-text">日历</span>
+          <span className="gradient-text">{t('calendar.title')}</span>
         </Title>
         <Button
           type="primary"
@@ -105,7 +126,7 @@ export default function CalendarPage() {
           onClick={() => { setEditingTodoId(null); setDefaultDate(null); setEditorOpen(true); }}
           style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none' }}
         >
-          新建 TODO
+          {t('calendar.newTodo')}
         </Button>
       </div>
 
@@ -114,13 +135,13 @@ export default function CalendarPage() {
           <Space key={priority} size={4}>
             <span className="legend-dot" style={{ background: color }} />
             <Text style={{ fontSize: 12, color: '#94a3b8' }}>
-              {{ urgent: '紧急', high: '高', medium: '中', low: '低' }[priority]}
+              {priorityLabels[priority]}
             </Text>
           </Space>
         ))}
         <Space size={4}>
           <span className="legend-dot completed-dot" />
-          <Text style={{ fontSize: 12, color: '#94a3b8' }}>已完成</Text>
+          <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('calendar.completed')}</Text>
         </Space>
       </div>
 
@@ -140,15 +161,15 @@ export default function CalendarPage() {
             center: 'title',
             right: isMobile ? 'listMonth' : 'dayGridMonth,listMonth',
           }}
-          buttonText={{ today: '今天', month: '月', list: '列表' }}
-          locale="zh-cn"
+          buttonText={{ today: t('calendar.today'), month: t('calendar.month'), list: t('calendar.list') }}
+          locale={fcLocale}
           firstDay={1}
           events={calendarEvents}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
           eventContent={EventContent}
-          moreLinkText={(n) => `+${n} 更多`}
+          moreLinkText={(n) => t('calendar.more', { n })}
           moreLinkClick={handleMoreLinkClick}
           dayMaxEvents={3}
           height="auto"

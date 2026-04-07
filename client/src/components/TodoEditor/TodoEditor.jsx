@@ -7,6 +7,7 @@ import { Editor } from '@bytemd/react';
 import gfm from '@bytemd/plugin-gfm';
 import highlight from '@bytemd/plugin-highlight';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { todoApi, categoryApi, tagApi, uploadApi } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
@@ -14,19 +15,6 @@ import { utcToDayjsInTz, toUTCString } from '../../utils/date';
 import 'bytemd/dist/index.css';
 import 'highlight.js/styles/github-dark.css';
 import './TodoEditor.css';
-
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: '🟢 低优先级' },
-  { value: 'medium', label: '🟡 中优先级' },
-  { value: 'high', label: '🟠 高优先级' },
-  { value: 'urgent', label: '🔴 紧急' },
-];
-
-const STATUS_OPTIONS = [
-  { value: 'pending', label: '待处理' },
-  { value: 'in_progress', label: '进行中' },
-  { value: 'completed', label: '已完成' },
-];
 
 const plugins = [gfm(), highlight()];
 
@@ -37,6 +25,20 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
   const [showExactTime, setShowExactTime] = useState(false);
   const queryClient = useQueryClient();
   const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
+  const { t } = useTranslation();
+
+  const PRIORITY_OPTIONS = [
+    { value: 'low',    label: t('todoEditor.priorityLow') },
+    { value: 'medium', label: t('todoEditor.priorityMedium') },
+    { value: 'high',   label: t('todoEditor.priorityHigh') },
+    { value: 'urgent', label: t('todoEditor.priorityUrgent') },
+  ];
+
+  const STATUS_OPTIONS = [
+    { value: 'pending',     label: t('todoEditor.statusPending', { defaultValue: t('todo.pending') }) },
+    { value: 'in_progress', label: t('todoEditor.statusInProgress', { defaultValue: t('todo.inProgress') }) },
+    { value: 'completed',   label: t('todoEditor.statusCompleted', { defaultValue: t('todo.completed') }) },
+  ];
 
   const { data: todoData } = useQuery({
     queryKey: ['todo', todoId],
@@ -57,8 +59,6 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
   const allCategories = categoriesData?.categories || [];
   const tags = tagsData?.tags || [];
 
-  // Build grouped options: roots with children become option groups,
-  // standalone roots (no children) become flat options.
   const rootCats = allCategories.filter((c) => !c.parent_id);
   const childCats = allCategories.filter((c) => c.parent_id);
   const rootsWithChildren = new Set(childCats.map((c) => c.parent_id));
@@ -90,7 +90,7 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
       label: rootLabel,
       title: root.name,
       options: [
-        { value: root.id, label: <Space size={6}><span style={dotStyle} />{root.name}（本分类）</Space> },
+        { value: root.id, label: <Space size={6}><span style={dotStyle} />{root.name}{t('todoEditor.thisCategory')}</Space> },
         ...groupChildren,
       ],
     };
@@ -98,20 +98,20 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
 
   useEffect(() => {
     if (todoData?.todo) {
-      const t = todoData.todo;
-      const dueDate = utcToDayjsInTz(t.due_date, tz);
+      const todo = todoData.todo;
+      const dueDate = utcToDayjsInTz(todo.due_date, tz);
       const hasExactTime = dueDate && !(dueDate.hour() === 0 && dueDate.minute() === 0);
       setShowExactTime(!!hasExactTime);
       form.setFieldsValue({
-        title: t.title,
-        category_id: t.category_id,
-        priority: t.priority,
-        status: t.status,
+        title: todo.title,
+        category_id: todo.category_id,
+        priority: todo.priority,
+        status: todo.status,
         due_date: dueDate,
-        tag_ids: t.tags?.map((tag) => tag.id) || [],
-        notify_enabled: t.notify_enabled !== 0,
+        tag_ids: todo.tags?.map((tag) => tag.id) || [],
+        notify_enabled: todo.notify_enabled !== 0,
       });
-      setContent(t.content || '');
+      setContent(todo.content || '');
     } else if (!todoId) {
       form.resetFields();
       setShowExactTime(false);
@@ -136,7 +136,7 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
       return todoId ? todoApi.update(todoId, payload) : todoApi.create(payload);
     },
     onSuccess: () => {
-      message.success(todoId ? '更新成功' : '创建成功');
+      message.success(todoId ? t('todoEditor.updateSuccess') : t('todoEditor.createSuccess'));
       queryClient.invalidateQueries({ queryKey: ['todos'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -145,7 +145,7 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
       }
       onClose();
     },
-    onError: (err) => message.error(err.message || '操作失败'),
+    onError: (err) => message.error(err.message || t('todoEditor.saveFailed')),
   });
 
   const onFinish = (values) => saveMutation.mutate(values);
@@ -159,12 +159,12 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
         if (result?.url) {
           results.push({ url: result.url, alt: file.name.replace(/\.[^.]+$/, '') });
           if (result.storage === 'local') {
-            message.info('图片已保存到本地服务器', 2);
+            message.info(t('todoEditor.imageSavedLocally'), 2);
           }
         }
       }
     } catch (err) {
-      message.error(err?.message || '图片上传失败');
+      message.error(err?.message || t('todoEditor.imageUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -175,44 +175,43 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
     <Drawer
       title={
         <span style={{ fontWeight: 600 }}>
-          {todoId ? '编辑 TODO' : '新建 TODO'}
+          {todoId ? t('todoEditor.editTitle') : t('todoEditor.createTitle')}
         </span>
       }
       open={open}
       onClose={onClose}
-
       footer={
         <Space style={{ float: 'right' }}>
-          <Button onClick={onClose}>取消</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button
             type="primary"
             loading={saveMutation.isPending}
             onClick={() => form.submit()}
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none' }}
           >
-            {todoId ? '保存修改' : '创建'}
+            {todoId ? t('todoEditor.save') : t('todoEditor.create')}
           </Button>
         </Space>
       }
       styles={{ wrapper: { width: 720 }, body: { padding: '16px 24px' } }}
     >
       <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Form.Item
+        <Form.Item
           name="title"
-          label="标题"
-          rules={[{ required: true, message: '请输入标题' }]}
+          label={t('todoEditor.titleLabel')}
+          rules={[{ required: true, message: t('todoEditor.titleRequired') }]}
         >
-          <Input placeholder="输入 TODO 标题..." size="large" className="editor-input" />
+          <Input placeholder={t('todoEditor.titlePlaceholder')} size="large" className="editor-input" />
         </Form.Item>
 
         <Row gutter={12}>
           <Col span={8}>
-            <Form.Item name="priority" label="优先级">
+            <Form.Item name="priority" label={t('todoEditor.priority')}>
               <Select options={PRIORITY_OPTIONS} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="status" label="状态">
+            <Form.Item name="status" label={t('todoEditor.status')}>
               <Select options={STATUS_OPTIONS} />
             </Form.Item>
           </Col>
@@ -221,20 +220,19 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
               name="due_date"
               label={
                 <Space size={6}>
-                  <span>截止时间</span>
+                  <span>{t('todoEditor.dueDate')}</span>
                   <Switch
                     size="small"
                     checked={showExactTime}
                     onChange={(checked) => {
                       setShowExactTime(checked);
-                      // When disabling exact time, strip to midnight
                       if (!checked) {
                         const cur = form.getFieldValue('due_date');
                         if (cur) form.setFieldValue('due_date', cur.startOf('day'));
                       }
                     }}
-                    checkedChildren="精确时间"
-                    unCheckedChildren="精确时间"
+                    checkedChildren={t('todoEditor.exactTime')}
+                    unCheckedChildren={t('todoEditor.exactTime')}
                   />
                 </Space>
               }
@@ -243,7 +241,7 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
                 showTime={showExactTime ? { format: 'HH:mm', defaultValue: dayjs('23:59', 'HH:mm') } : false}
                 format={showExactTime ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'}
                 style={{ width: '100%' }}
-                placeholder="选择截止日期"
+                placeholder={t('todoEditor.dueDatePlaceholder')}
               />
             </Form.Item>
           </Col>
@@ -251,24 +249,24 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
 
         <Row gutter={12}>
           <Col span={12}>
-            <Form.Item name="category_id" label="分类">
+            <Form.Item name="category_id" label={t('todoEditor.category')}>
               <Select
-                placeholder="选择分类"
+                placeholder={t('todoEditor.categoryPlaceholder')}
                 allowClear
                 options={categoryOptions}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="tag_ids" label="标签">
+            <Form.Item name="tag_ids" label={t('todoEditor.tags')}>
               <Select
                 mode="multiple"
-                placeholder="选择标签"
+                placeholder={t('todoEditor.tagsPlaceholder')}
                 allowClear
                 maxTagCount={3}
-                options={tags.map((t) => ({ value: t.id, label: t.name }))}
+                options={tags.map((tag) => ({ value: tag.id, label: tag.name }))}
                 tagRender={({ label, value, closable, onClose }) => {
-                  const tag = tags.find((t) => t.id === value);
+                  const tag = tags.find((tg) => tg.id === value);
                   return (
                     <Tag
                       color={tag?.color}
@@ -287,21 +285,24 @@ export default function TodoEditor({ todoId, open, onClose, defaultDate, default
 
         <Form.Item name="notify_enabled" valuePropName="checked" style={{ marginBottom: 8 }}>
           <Switch
-            checkedChildren="推送提醒已开启"
-            unCheckedChildren="不加入推送提醒"
+            checkedChildren={t('todoEditor.notifyEnabled')}
+            unCheckedChildren={t('todoEditor.notifyDisabled')}
           />
         </Form.Item>
 
         <Divider style={{ margin: '8px 0 16px' }} />
 
-        <div className="editor-label">内容（Markdown）{uploading && <span style={{ color: '#6366f1', marginLeft: 8 }}>上传图片中...</span>}</div>
+        <div className="editor-label">
+          {t('todoEditor.content')}
+          {uploading && <span style={{ color: '#6366f1', marginLeft: 8 }}>{t('todoEditor.uploadingImage')}</span>}
+        </div>
         <div className="bytemd-wrapper">
           <Editor
             value={content}
             plugins={plugins}
             onChange={setContent}
             uploadImages={uploadImages}
-            locale={{ upload_images: '上传图片' }}
+            locale={{ upload_images: t('todoEditor.uploadImages') }}
           />
         </div>
       </Form>

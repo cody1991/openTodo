@@ -69,9 +69,9 @@ router.post('/:id/approve', (req, res) => {
     )
     .get(id);
 
-  if (!row) return res.status(404).json({ message: '需求不存在' });
-  if (row.owner_id !== req.user.id) return res.status(403).json({ message: '无权操作' });
-  if (row.status !== 'pending') return res.status(400).json({ message: '该需求已处理' });
+  if (!row) return res.status(404).json({ message: req.t('shareRequests.notFound') });
+  if (row.owner_id !== req.user.id) return res.status(403).json({ message: req.t('shareRequests.forbidden') });
+  if (row.status !== 'pending') return res.status(400).json({ message: req.t('shareRequests.alreadyHandled') });
 
   const o = req.body || {};
   const title = o.title !== undefined ? o.title : row.title;
@@ -100,7 +100,7 @@ router.post('/:id/approve', (req, res) => {
     const updated = db.prepare('SELECT * FROM share_requests WHERE id = ?').get(id);
     res.json({ todo, request: { ...updated, tag_ids: parseTagIds(updated.tag_ids), tags: todo.tags } });
   } catch (e) {
-    if (e.statusCode) return res.status(e.statusCode).json({ message: e.message });
+    if (e.statusCode) return res.status(e.statusCode).json({ message: e.i18nKey ? req.t(e.i18nKey) : e.message });
     throw e;
   }
 });
@@ -115,9 +115,9 @@ router.post('/:id/reject', (req, res) => {
     )
     .get(id);
 
-  if (!row) return res.status(404).json({ message: '需求不存在' });
-  if (row.owner_id !== req.user.id) return res.status(403).json({ message: '无权操作' });
-  if (row.status !== 'pending') return res.status(400).json({ message: '该需求已处理' });
+  if (!row) return res.status(404).json({ message: req.t('shareRequests.notFound') });
+  if (row.owner_id !== req.user.id) return res.status(403).json({ message: req.t('shareRequests.forbidden') });
+  if (row.status !== 'pending') return res.status(400).json({ message: req.t('shareRequests.alreadyHandled') });
 
   db.prepare(`UPDATE share_requests SET status = 'rejected', reviewed_at = datetime('now') WHERE id = ?`).run(id);
 

@@ -10,12 +10,13 @@ import {
   SettingOutlined, LinkOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import dayjs from 'dayjs';
 import { categoryApi, todoApi, shareApi } from '../../services/api';
 import './ShareModal.css';
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Title } = Typography;
 const { RangePicker } = DatePicker;
 
 function CatDot({ color }) {
@@ -30,86 +31,18 @@ function CatDot({ color }) {
   );
 }
 
-const STATUS_OPTIONS = [
-  { label: '待处理', value: 'pending', color: '#faad14' },
-  { label: '进行中', value: 'in_progress', color: '#1677ff' },
-  { label: '已完成', value: 'completed', color: '#52c41a' },
-];
-
-const EXPIRES_OPTIONS = [
-  { label: '30 分钟', value: '30m' },
-  { label: '1 小时', value: '1h' },
-  { label: '1 天', value: '1d' },
-  { label: '7 天', value: '7d' },
-  { label: '30 天', value: '30d' },
-  { label: '3 个月', value: '90d' },
-  { label: '6 个月', value: '180d' },
-  { label: '1 年', value: '365d' },
-  { label: '永久有效', value: 'never' },
-];
-
-// Sentinel value used in edit mode to mean "don't change the current expiry"
 const KEEP_EXPIRES = '__keep__';
-
-const DATE_FIELD_OPTIONS = [
-  { label: '创建时间', value: 'created_at' },
-  { label: '更新时间', value: 'updated_at' },
-  { label: '完成时间', value: 'completed_at' },
-  { label: '截止时间', value: 'due_date' },
-];
-
-const STEPS = [
-  { title: '基本信息', icon: <SettingOutlined /> },
-  { title: '选择分类', icon: <FolderOutlined /> },
-  { title: '屏蔽项目', icon: <FileTextOutlined /> },
-  { title: '状态 & 时间', icon: <FilterOutlined /> },
-  { title: '有效期', icon: <ClockCircleOutlined /> },
-];
-
-const THEMES = [
-  {
-    value: 'light',
-    label: '清爽',
-    desc: '白底简洁，清晰易读',
-    preview: 'linear-gradient(135deg,#f8fafc 0%,#e0e7ff 100%)',
-    accent: '#6366f1',
-  },
-  {
-    value: 'dark',
-    label: '深色',
-    desc: '深蓝背景，科技感强',
-    preview: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)',
-    accent: '#818cf8',
-  },
-  {
-    value: 'vibrant',
-    label: '鲜艳',
-    desc: '彩色卡片，活泼有趣',
-    preview: 'linear-gradient(135deg,#fdf4ff 0%,#ffe4e6 50%,#fef9c3 100%)',
-    accent: '#ec4899',
-  },
-  {
-    value: 'minimal',
-    label: '极简',
-    desc: '去除装饰，专注内容',
-    preview: 'linear-gradient(135deg,#ffffff 0%,#f1f5f9 100%)',
-    accent: '#334155',
-  },
-];
 
 export default function ShareModal({ open, onClose, editLink = null }) {
   const isEditMode = !!editLink;
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [current, setCurrent] = useState(0);
   const [copied, setCopied] = useState(false);
   const [createdLink, setCreatedLink] = useState(null);
 
-  // name/headline are kept in explicit state so they survive step navigation
-  // (the Form component unmounts when user moves away from step 0)
-  const [name, setName] = useState(editLink?.name ?? '我的分享');
+  const [name, setName] = useState(editLink?.name ?? t('share.defaultName'));
   const [headline, setHeadline] = useState(editLink?.headline ?? '');
-
-  // Initialise from editLink when provided (component is remounted via key when editLink changes)
   const [selectedCategoryIds, setSelectedCategoryIds] = useState(editLink?.category_ids ?? null);
   const [excludedTodoIds, setExcludedTodoIds] = useState(editLink?.excluded_todo_ids ?? []);
   const [selectedStatuses, setSelectedStatuses] = useState(
@@ -124,6 +57,45 @@ export default function ShareModal({ open, onClose, editLink = null }) {
   const [expiresIn, setExpiresIn] = useState(isEditMode ? KEEP_EXPIRES : 'never');
   const [theme, setTheme] = useState(editLink?.theme ?? 'light');
 
+  const STATUS_OPTIONS = [
+    { label: t('share.statusPending'),    value: 'pending',     color: '#faad14' },
+    { label: t('share.statusInProgress'), value: 'in_progress', color: '#1677ff' },
+    { label: t('share.statusCompleted'),  value: 'completed',   color: '#52c41a' },
+  ];
+
+  const EXPIRES_OPTIONS = [
+    { label: t('share.expires.30m'),  value: '30m' },
+    { label: t('share.expires.1h'),   value: '1h' },
+    { label: t('share.expires.1d'),   value: '1d' },
+    { label: t('share.expires.7d'),   value: '7d' },
+    { label: t('share.expires.30d'),  value: '30d' },
+    { label: t('share.expires.90d'),  value: '90d' },
+    { label: t('share.expires.180d'), value: '180d' },
+    { label: t('share.expires.365d'), value: '365d' },
+    { label: t('share.expires.never'), value: 'never' },
+  ];
+
+  const DATE_FIELD_OPTIONS = [
+    { label: t('share.dateCreated'),   value: 'created_at' },
+    { label: t('share.dateUpdated'),   value: 'updated_at' },
+    { label: t('share.dateCompleted'), value: 'completed_at' },
+    { label: t('share.dateDue'),       value: 'due_date' },
+  ];
+
+  const STEPS = [
+    { title: t('share.steps.basicInfo'),        icon: <SettingOutlined /> },
+    { title: t('share.steps.selectCategories'), icon: <FolderOutlined /> },
+    { title: t('share.steps.blockItems'),       icon: <FileTextOutlined /> },
+    { title: t('share.steps.statusAndTime'),    icon: <FilterOutlined /> },
+    { title: t('share.steps.validity'),         icon: <ClockCircleOutlined /> },
+  ];
+
+  const THEMES = [
+    { value: 'light',   label: t('share.themes.light'),   desc: t('share.themes.lightDesc'),   preview: 'linear-gradient(135deg,#f8fafc 0%,#e0e7ff 100%)', accent: '#6366f1' },
+    { value: 'dark',    label: t('share.themes.dark'),    desc: t('share.themes.darkDesc'),    preview: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)', accent: '#818cf8' },
+    { value: 'vibrant', label: t('share.themes.vibrant'), desc: t('share.themes.vibrantDesc'), preview: 'linear-gradient(135deg,#fdf4ff 0%,#ffe4e6 50%,#fef9c3 100%)', accent: '#ec4899' },
+    { value: 'minimal', label: t('share.themes.minimal'), desc: t('share.themes.minimalDesc'), preview: 'linear-gradient(135deg,#ffffff 0%,#f1f5f9 100%)', accent: '#334155' },
+  ];
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -145,19 +117,19 @@ export default function ShareModal({ open, onClose, editLink = null }) {
     onSuccess: (link) => {
       setCreatedLink(link);
       queryClient.invalidateQueries({ queryKey: ['share-links'] });
-      message.success('分享链接创建成功！');
+      message.success(t('share.created'));
     },
-    onError: (e) => message.error(e.message || '创建失败'),
+    onError: (e) => message.error(e.message || t('share.createFailed')),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => shareApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['share-links'] });
-      message.success('分享链接已更新');
+      message.success(t('share.updated'));
       handleClose();
     },
-    onError: (e) => message.error(e.message || '保存失败'),
+    onError: (e) => message.error(e.message || t('share.saveFailed')),
   });
 
   const rootCategories = categories.filter((c) => !c.parent_id);
@@ -188,7 +160,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
       title: (
         <span className="cat-tree-item cat-tree-item--uncategorized">
           <CatDot color="#475569" />
-          <span className="cat-tree-name">未分类</span>
+          <span className="cat-tree-name">{t('share.uncategorized')}</span>
         </span>
       ),
       key: 'cat--1',
@@ -208,7 +180,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
 
   const handleCreate = async () => {
     const payload = {
-      name: name.trim() || '我的分享',
+      name: name.trim() || t('share.defaultName'),
       headline: headline.trim() || null,
       category_ids: selectedCategoryIds,
       excluded_todo_ids: excludedTodoIds,
@@ -237,7 +209,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
   const handleReset = () => {
     setCurrent(0);
     setCreatedLink(null);
-    setName('我的分享');
+    setName(t('share.defaultName'));
     setHeadline('');
     setSelectedCategoryIds(null);
     setExcludedTodoIds([]);
@@ -264,48 +236,48 @@ export default function ShareModal({ open, onClose, editLink = null }) {
           <div className="share-step">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <div style={{ marginBottom: 6, fontSize: 13, color: '#374151' }}>分享名称</div>
+                <div style={{ marginBottom: 6, fontSize: 13, color: '#374151' }}>{t('share.nameLabel')}</div>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="给这次分享起个名字，方便管理"
+                  placeholder={t('share.namePlaceholder')}
                   maxLength={50}
                   showCount
                 />
               </div>
               <div>
-                <div style={{ marginBottom: 6, fontSize: 13, color: '#374151' }}>简介（显示在分享页顶部）</div>
+                <div style={{ marginBottom: 6, fontSize: 13, color: '#374151' }}>{t('share.headlineLabel')}</div>
                 <Input.TextArea
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  placeholder="可选：介绍一下你在做什么，如「这是我2026年Q1的工作进展」"
+                  placeholder={t('share.headlinePlaceholder')}
                   rows={3}
                   maxLength={200}
                   showCount
                 />
               </div>
               <div>
-                <div style={{ marginBottom: 10, fontSize: 13, color: '#374151', fontWeight: 500 }}>页面主题</div>
+                <div style={{ marginBottom: 10, fontSize: 13, color: '#374151', fontWeight: 500 }}>{t('share.themeLabel')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-                  {THEMES.map((t) => (
+                  {THEMES.map((thm) => (
                     <div
-                      key={t.value}
-                      onClick={() => setTheme(t.value)}
+                      key={thm.value}
+                      onClick={() => setTheme(thm.value)}
                       style={{
                         borderRadius: 10,
-                        border: `2px solid ${theme === t.value ? t.accent : '#e2e8f0'}`,
+                        border: `2px solid ${theme === thm.value ? thm.accent : '#e2e8f0'}`,
                         cursor: 'pointer',
                         overflow: 'hidden',
                         transition: 'border-color 0.2s, box-shadow 0.2s',
-                        boxShadow: theme === t.value ? `0 0 0 3px ${t.accent}22` : 'none',
+                        boxShadow: theme === thm.value ? `0 0 0 3px ${thm.accent}22` : 'none',
                       }}
                     >
-                      <div style={{ height: 52, background: t.preview }} />
+                      <div style={{ height: 52, background: thm.preview }} />
                       <div style={{ padding: '6px 8px', background: '#fff' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: theme === t.value ? t.accent : '#374151' }}>
-                          {t.label}
+                        <div style={{ fontSize: 12, fontWeight: 600, color: theme === thm.value ? thm.accent : '#374151' }}>
+                          {thm.label}
                         </div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{t.desc}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{thm.desc}</div>
                       </div>
                     </div>
                   ))}
@@ -319,11 +291,11 @@ export default function ShareModal({ open, onClose, editLink = null }) {
         return (
           <div className="share-step">
             <div className="step-hint">
-              <Text type="secondary">不选则分享全部分类。勾选后只分享选中的分类。</Text>
+              <Text type="secondary">{t('share.categoryHint')}</Text>
             </div>
             <div className="category-tree-wrap">
               {categoryTreeData.length === 0 ? (
-                <Empty description="暂无分类" />
+                <Empty description={t('share.noCategories')} />
               ) : (
                 <Tree
                   checkable
@@ -336,9 +308,9 @@ export default function ShareModal({ open, onClose, editLink = null }) {
             </div>
             <div className="selection-summary">
               {selectedCategoryIds === null ? (
-                <Tag color="blue">分享全部分类</Tag>
+                <Tag color="blue">{t('share.shareAll')}</Tag>
               ) : (
-                <Tag color="purple">已选 {selectedCategoryIds.length} 个分类</Tag>
+                <Tag color="purple">{t('share.selectedCategories', { count: selectedCategoryIds.length })}</Tag>
               )}
             </div>
           </div>
@@ -348,10 +320,10 @@ export default function ShareModal({ open, onClose, editLink = null }) {
         return (
           <div className="share-step">
             <div className="step-hint">
-              <Text type="secondary">勾选要屏蔽的项目，被屏蔽的项目不会出现在分享页中。</Text>
+              <Text type="secondary">{t('share.blockHint')}</Text>
             </div>
             {filteredTodos.length === 0 ? (
-              <Empty description="该筛选条件下没有待分享的 TODO" />
+              <Empty description={t('share.noTodos')} />
             ) : (
               <Checkbox.Group
                 value={excludedTodoIds}
@@ -379,7 +351,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
             )}
             {excludedTodoIds.length > 0 && (
               <div style={{ marginTop: 12 }}>
-                <Tag color="red">已屏蔽 {excludedTodoIds.length} 个项目</Tag>
+                <Tag color="red">{t('share.blocked', { count: excludedTodoIds.length })}</Tag>
               </div>
             )}
           </div>
@@ -389,7 +361,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
         return (
           <div className="share-step">
             <div className="share-step-section">
-              <Text strong>分享哪些状态</Text>
+              <Text strong>{t('share.statusSection')}</Text>
               <div style={{ marginTop: 8 }}>
                 <Checkbox.Group
                   options={STATUS_OPTIONS.map((s) => ({
@@ -403,7 +375,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
             </div>
             <Divider />
             <div className="share-step-section">
-              <Text strong>时间范围筛选（可选）</Text>
+              <Text strong>{t('share.timeRangeSection')}</Text>
               <div style={{ marginTop: 8 }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Select
@@ -414,13 +386,13 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                   />
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {[
-                      { label: '全部', range: () => null },
-                      { label: '今天', range: () => [dayjs().startOf('day'), dayjs().endOf('day')] },
-                      { label: '本周', range: () => [dayjs().startOf('week'), dayjs().endOf('week')] },
-                      { label: '本月', range: () => [dayjs().startOf('month'), dayjs().endOf('month')] },
-                      { label: '最近 7 天', range: () => [dayjs().subtract(6, 'day').startOf('day'), dayjs().endOf('day')] },
-                      { label: '最近 30 天', range: () => [dayjs().subtract(29, 'day').startOf('day'), dayjs().endOf('day')] },
-                      { label: '最近 3 月', range: () => [dayjs().subtract(3, 'month').startOf('day'), dayjs().endOf('day')] },
+                      { label: t('share.allTime'),      range: () => null },
+                      { label: t('share.today'),        range: () => [dayjs().startOf('day'), dayjs().endOf('day')] },
+                      { label: t('share.thisWeek'),     range: () => [dayjs().startOf('week'), dayjs().endOf('week')] },
+                      { label: t('share.thisMonth'),    range: () => [dayjs().startOf('month'), dayjs().endOf('month')] },
+                      { label: t('share.last7Days'),    range: () => [dayjs().subtract(6, 'day').startOf('day'), dayjs().endOf('day')] },
+                      { label: t('share.last30Days'),   range: () => [dayjs().subtract(29, 'day').startOf('day'), dayjs().endOf('day')] },
+                      { label: t('share.last3Months'),  range: () => [dayjs().subtract(3, 'month').startOf('day'), dayjs().endOf('day')] },
                     ].map(({ label, range }) => {
                       const r = range();
                       const isAll = r === null;
@@ -444,7 +416,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                   <RangePicker
                     value={dateRange}
                     onChange={setDateRange}
-                    placeholder={['开始日期', '结束日期']}
+                    placeholder={[t('share.startDate'), t('share.endDate')]}
                     style={{ width: '100%' }}
                   />
                 </Space>
@@ -456,22 +428,22 @@ export default function ShareModal({ open, onClose, editLink = null }) {
       case 4: {
         const currentExpiry = isEditMode && editLink.expires_at;
         const expiresOptions = isEditMode
-          ? [{ label: '保持不变', value: KEEP_EXPIRES }, ...EXPIRES_OPTIONS]
+          ? [{ label: t('share.keepExpiry'), value: KEEP_EXPIRES }, ...EXPIRES_OPTIONS]
           : EXPIRES_OPTIONS;
         return (
           <div className="share-step">
             <div className="step-hint">
-              <Text type="secondary">超过有效期后分享链接将自动失效。</Text>
+              <Text type="secondary">{t('share.expiryHint')}</Text>
               {isEditMode && currentExpiry && (
                 <div style={{ marginTop: 6 }}>
                   <Tag color={dayjs(editLink.expires_at).isBefore(dayjs()) ? 'red' : 'blue'}>
-                    当前有效期至 {dayjs(editLink.expires_at).format('YYYY-MM-DD HH:mm')}
+                    {t('share.currentExpiry', { date: dayjs(editLink.expires_at).format('YYYY-MM-DD HH:mm') })}
                   </Tag>
                 </div>
               )}
               {isEditMode && !currentExpiry && (
                 <div style={{ marginTop: 6 }}>
-                  <Tag color="green">当前永久有效</Tag>
+                  <Tag color="green">{t('share.permanent')}</Tag>
                 </div>
               )}
             </div>
@@ -503,7 +475,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
         title={
           <Space>
             <ShareAltOutlined style={{ color: '#6366f1' }} />
-            <span>{isEditMode ? '编辑分享链接' : '分享我的 TODO'}</span>
+            <span>{isEditMode ? t('share.editTitle') : t('share.title')}</span>
           </Space>
         }
         width={640}
@@ -515,14 +487,14 @@ export default function ShareModal({ open, onClose, editLink = null }) {
           <div className="share-success">
             <div className="share-success-icon">🎉</div>
             <Title level={4} style={{ textAlign: 'center' }}>
-              分享链接已生成
+              {t('share.linkGenerated')}
             </Title>
             <div className="share-url-box">
               <Input
                 readOnly
                 value={getShareUrl(createdLink.key)}
                 suffix={
-                  <Tooltip title={copied ? '已复制！' : '复制链接'}>
+                  <Tooltip title={copied ? t('common.copied') : t('common.copy')}>
                     <Button
                       type="text"
                       size="small"
@@ -542,7 +514,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                 level="M"
               />
               <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: 8, fontSize: 12 }}>
-                扫码打开分享页
+                {t('share.scanQr')}
               </Text>
             </div>
             <Space style={{ marginTop: 16, justifyContent: 'center', width: '100%' }}>
@@ -551,10 +523,10 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                 icon={<EyeOutlined />}
                 onClick={() => window.open(`/share/${createdLink.key}`, '_blank')}
               >
-                预览分享页
+                {t('share.previewPage')}
               </Button>
-              <Button onClick={handleReset}>再创建一个</Button>
-              <Button onClick={handleClose}>完成</Button>
+              <Button onClick={handleReset}>{t('share.createAnother')}</Button>
+              <Button onClick={handleClose}>{t('common.done')}</Button>
             </Space>
           </div>
         ) : (
@@ -568,12 +540,12 @@ export default function ShareModal({ open, onClose, editLink = null }) {
             <div className="share-step-content">{renderStep()}</div>
             <div className="share-footer">
               {current > 0 && (
-                <Button onClick={() => setCurrent((c) => c - 1)}>上一步</Button>
+                <Button onClick={() => setCurrent((c) => c - 1)}>{t('common.prev')}</Button>
               )}
               <div style={{ flex: 1 }} />
               {current < STEPS.length - 1 ? (
                 <Button type="primary" onClick={() => setCurrent((c) => c + 1)}>
-                  下一步
+                  {t('common.next')}
                 </Button>
               ) : (
                 <Button
@@ -582,7 +554,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                   loading={createMutation.isPending || updateMutation.isPending}
                   onClick={handleCreate}
                 >
-                  {isEditMode ? '保存修改' : '生成分享链接'}
+                  {isEditMode ? t('share.saveChanges') : t('share.generate')}
                 </Button>
               )}
             </div>

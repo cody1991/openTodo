@@ -10,10 +10,10 @@ router.get('/:key', (req, res) => {
   const { key } = req.params;
 
   const link = db.prepare('SELECT * FROM share_links WHERE key = ?').get(key);
-  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+  if (!link) return res.status(404).json({ message: req.t('share.notFound') });
 
   if (link.expires_at && new Date(link.expires_at) < new Date()) {
-    return res.status(410).json({ message: '该分享链接已过期' });
+    return res.status(410).json({ message: req.t('share.expired') });
   }
 
   // Get owner info
@@ -150,10 +150,10 @@ router.get('/:key', (req, res) => {
 router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
   const { key } = req.params;
   const link = db.prepare('SELECT * FROM share_links WHERE key = ?').get(key);
-  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+  if (!link) return res.status(404).json({ message: req.t('share.notFound') });
 
   if (link.expires_at && new Date(link.expires_at) < new Date()) {
-    return res.status(410).json({ message: '该分享链接已过期' });
+    return res.status(410).json({ message: req.t('share.expired') });
   }
 
   const ownerId = link.user_id;
@@ -168,10 +168,10 @@ router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
   } = req.body;
 
   if (!title || !String(title).trim()) {
-    return res.status(400).json({ message: '请填写标题' });
+    return res.status(400).json({ message: req.t('share.titleRequired') });
   }
   if (!['low', 'medium', 'high', 'urgent'].includes(priority)) {
-    return res.status(400).json({ message: '无效的优先级' });
+    return res.status(400).json({ message: req.t('share.invalidPriority') });
   }
 
   const ids = Array.isArray(tag_ids)
@@ -179,10 +179,10 @@ router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
     : [];
 
   if (!validateCategoryOwnership(category_id, ownerId)) {
-    return res.status(400).json({ message: '分类无效' });
+    return res.status(400).json({ message: req.t('share.invalidCategory') });
   }
   if (!validateTagsOwnership(ids, ownerId)) {
-    return res.status(400).json({ message: '标签无效' });
+    return res.status(400).json({ message: req.t('share.invalidTags') });
   }
 
   const contactStr = contact != null ? String(contact).slice(0, 200) : null;
@@ -214,7 +214,7 @@ router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
 
   res.status(201).json({
     id: result.lastInsertRowid,
-    message: '已提交',
+    message: req.t('share.submitted'),
   });
 });
 
@@ -222,7 +222,7 @@ router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
 router.post('/:key/view', (req, res) => {
   const { key } = req.params;
   const link = db.prepare('SELECT id FROM share_links WHERE key = ?').get(key);
-  if (!link) return res.status(404).json({ message: '分享链接不存在' });
+  if (!link) return res.status(404).json({ message: req.t('share.notFound') });
 
   const result = db
     .prepare(`UPDATE share_links SET view_count = view_count + 1, last_viewed_at = datetime('now') WHERE key = ?`)

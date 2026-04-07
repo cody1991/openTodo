@@ -50,13 +50,15 @@ function createTodoForUser(userId, payload) {
   const safeTitle = String(title).trim();
 
   if (!validateCategoryOwnership(category_id, userId)) {
-    const err = new Error('分类不存在或无权使用');
+    const err = new Error('todos.categoryInvalid');
     err.statusCode = 400;
+    err.i18nKey = 'todos.categoryInvalid';
     throw err;
   }
   if (!validateTagsOwnership(tag_ids, userId)) {
-    const err = new Error('标签不存在或无权使用');
+    const err = new Error('todos.tagsInvalid');
     err.statusCode = 400;
+    err.i18nKey = 'todos.tagsInvalid';
     throw err;
   }
 

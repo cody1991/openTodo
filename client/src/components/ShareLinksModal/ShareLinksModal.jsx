@@ -9,11 +9,13 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { shareApi } from '../../services/api';
 import ShareModal from '../ShareModal/ShareModal';
 import './ShareLinksModal.css';
 
 export default function ShareLinksModal({ open, onClose }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingLink, setEditingLink] = useState(null);
@@ -51,7 +53,7 @@ export default function ShareLinksModal({ open, onClose }) {
         title={
           <Space>
             <ShareAltOutlined style={{ color: '#6366f1' }} />
-            <span>我的分享链接</span>
+            <span>{t('shareLinksModal.title')}</span>
             {links.length > 0 && <Badge count={links.length} color="#6366f1" />}
           </Space>
         }
@@ -62,9 +64,9 @@ export default function ShareLinksModal({ open, onClose }) {
               icon={<PlusOutlined />}
               onClick={() => setCreateOpen(true)}
             >
-              新建分享
+              {t('shareLinksModal.newShare')}
             </Button>
-            <Button onClick={onClose}>关闭</Button>
+            <Button onClick={onClose}>{t('shareLinksModal.close')}</Button>
           </div>
         }
         width={640}
@@ -75,12 +77,12 @@ export default function ShareLinksModal({ open, onClose }) {
           <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>
         ) : links.length === 0 ? (
           <Empty
-            description="还没有分享链接"
+            description={t('shareLinksModal.empty')}
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             style={{ padding: '32px 0' }}
           >
             <Button type="primary" icon={<ShareAltOutlined />} onClick={() => setCreateOpen(true)}>
-              创建第一个分享
+              {t('shareLinksModal.createFirst')}
             </Button>
           </Empty>
         ) : (
@@ -93,17 +95,18 @@ export default function ShareLinksModal({ open, onClose }) {
 
               return (
                 <div key={link.id} className={`slm-item ${expired ? 'slm-item--expired' : ''}`}>
-                  {/* Top row */}
                   <div className="slm-top">
                     <div className="slm-info">
                       <div className="slm-name-row">
                         <LinkOutlined style={{ color: expired ? '#94a3b8' : '#6366f1', fontSize: 13 }} />
                         <span className="slm-name">{link.name}</span>
-                        {expired && <Tag bordered={false} color="default">已过期</Tag>}
-                        {!expired && !link.expires_at && <Tag bordered={false} color="success">永久有效</Tag>}
+                        {expired && <Tag bordered={false} color="default">{t('shareLinksModal.expired')}</Tag>}
+                        {!expired && !link.expires_at && <Tag bordered={false} color="success">{t('shareLinksModal.permanent')}</Tag>}
                         {!expired && link.expires_at && (
                           <Tag bordered={false} color={daysLeft < 3 ? 'orange' : 'blue'}>
-                            {daysLeft === 0 ? '今天到期' : `${dayjs(link.expires_at).format('MM/DD')} 到期`}
+                            {daysLeft === 0
+                              ? t('shareLinksModal.expiresToday')
+                              : t('shareLinksModal.expiresOn', { date: dayjs(link.expires_at).format('MM/DD') })}
                           </Tag>
                         )}
                       </div>
@@ -111,7 +114,7 @@ export default function ShareLinksModal({ open, onClose }) {
                     </div>
 
                     <Space size={4} className="slm-actions">
-                      <Tooltip title={copiedKey === link.key ? '已复制！' : '复制链接'}>
+                      <Tooltip title={copiedKey === link.key ? t('shareLinksModal.copied') : t('shareLinksModal.copyLink')}>
                         <Button
                           size="small" type="text"
                           icon={<CopyOutlined />}
@@ -120,7 +123,7 @@ export default function ShareLinksModal({ open, onClose }) {
                           disabled={expired}
                         />
                       </Tooltip>
-                      <Tooltip title="在新标签页预览">
+                      <Tooltip title={t('shareLinksModal.preview')}>
                         <Button
                           size="small" type="text"
                           icon={<EyeOutlined />}
@@ -129,7 +132,7 @@ export default function ShareLinksModal({ open, onClose }) {
                           disabled={expired}
                         />
                       </Tooltip>
-                      <Tooltip title={showQr ? '收起二维码' : '显示二维码'}>
+                      <Tooltip title={showQr ? t('shareLinksModal.hideQr') : t('shareLinksModal.showQr')}>
                         <Button
                           size="small" type="text"
                           icon={<QrcodeOutlined />}
@@ -138,7 +141,7 @@ export default function ShareLinksModal({ open, onClose }) {
                           disabled={expired}
                         />
                       </Tooltip>
-                      <Tooltip title="编辑">
+                      <Tooltip title={t('shareLinksModal.edit')}>
                         <Button
                           size="small" type="text"
                           icon={<EditOutlined />}
@@ -147,10 +150,11 @@ export default function ShareLinksModal({ open, onClose }) {
                         />
                       </Tooltip>
                       <Popconfirm
-                        title="确定删除这个分享链接吗？"
-                        description="删除后该链接将立即失效"
+                        title={t('shareLinksModal.deleteConfirm')}
+                        description={t('shareLinksModal.deleteDesc')}
                         onConfirm={() => deleteMutation.mutate(link.id)}
-                        okText="删除" cancelText="取消"
+                        okText={t('shareLinksModal.deleteOk')}
+                        cancelText={t('shareLinksModal.deleteCancel')}
                         okButtonProps={{ danger: true }}
                       >
                         <Button
@@ -163,31 +167,28 @@ export default function ShareLinksModal({ open, onClose }) {
                     </Space>
                   </div>
 
-                  {/* Stats row */}
                   <div className="slm-stats">
                     <span className="slm-stat">
-                      <EyeOutlined /> {link.view_count} 次浏览
+                      <EyeOutlined /> {t('shareLinksModal.views', { count: link.view_count })}
                     </span>
                     {link.last_viewed_at && (
                       <span className="slm-stat">
-                        最近访问 {dayjs(link.last_viewed_at).format('MM-DD HH:mm')}
+                        {t('shareLinksModal.lastVisited', { time: dayjs(link.last_viewed_at).format('MM-DD HH:mm') })}
                       </span>
                     )}
                     <span className="slm-stat">
-                      <ClockCircleOutlined /> {dayjs(link.created_at).format('YYYY-MM-DD')} 创建
+                      <ClockCircleOutlined /> {t('shareLinksModal.createdAt', { date: dayjs(link.created_at).format('YYYY-MM-DD') })}
                     </span>
                   </div>
 
-                  {/* URL */}
                   <div className="slm-url">
                     <code className="slm-code">{url}</code>
                   </div>
 
-                  {/* QR Code */}
                   {showQr && !expired && (
                     <div className="slm-qr">
                       <QRCodeSVG value={url} size={110} bgColor="transparent" fgColor="#6366f1" level="M" />
-                      <span className="slm-qr-label">扫码访问</span>
+                      <span className="slm-qr-label">{t('shareLinksModal.scanQr')}</span>
                     </div>
                   )}
                 </div>

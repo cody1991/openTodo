@@ -9,6 +9,7 @@ import {
   SettingOutlined, ExportOutlined, ImportOutlined, ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
@@ -26,21 +27,6 @@ import './TodoList.css';
 
 const { Text, Title } = Typography;
 const { Search } = Input;
-
-const STATUS_FILTERS = [
-  { value: '', label: '全部' },
-  { value: 'pending', label: '待处理' },
-  { value: 'in_progress', label: '进行中' },
-  { value: 'completed', label: '已完成' },
-];
-
-const PRIORITY_FILTERS = [
-  { value: '', label: '全部优先级' },
-  { value: 'urgent', label: '🔴 紧急' },
-  { value: 'high', label: '🟠 高' },
-  { value: 'medium', label: '🟡 中' },
-  { value: 'low', label: '🟢 低' },
-];
 
 const PRESET_COLORS = [
   '#6366f1', '#ef4444', '#f97316', '#eab308', '#22c55e',
@@ -83,8 +69,24 @@ export default function TodoList() {
   const [importLoading, setImportLoading] = useState(false);
   const queryClient = useQueryClient();
   const importInputRef = useRef(null);
+  const { t } = useTranslation();
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const STATUS_FILTERS = [
+    { value: '', label: t('todo.allStatus') },
+    { value: 'pending', label: t('todo.pending') },
+    { value: 'in_progress', label: t('todo.inProgress') },
+    { value: 'completed', label: t('todo.completed') },
+  ];
+
+  const PRIORITY_FILTERS = [
+    { value: '', label: t('todo.allPriority') },
+    { value: 'urgent', label: t('todo.urgent') },
+    { value: 'high', label: t('todo.high') },
+    { value: 'medium', label: t('todo.medium') },
+    { value: 'low', label: t('todo.low') },
+  ];
 
   const handleExport = async () => {
     setExportLoading(true);
@@ -97,9 +99,9 @@ export default function TodoList() {
       a.download = `todos-export-${dayjs().format('YYYY-MM-DD')}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      message.success(`导出成功，共 ${data.todos?.length || 0} 条待办`);
+      message.success(t('todo.exportSuccess', { count: data.todos?.length || 0 }));
     } catch (e) {
-      message.error(e.message || '导出失败');
+      message.error(e.message || t('todo.exportFailed'));
     } finally {
       setExportLoading(false);
     }
@@ -113,31 +115,35 @@ export default function TodoList() {
       try {
         const data = JSON.parse(ev.target.result);
         if (!data.todos || !Array.isArray(data.todos)) {
-          message.error('文件格式不正确，请选择有效的导出文件');
+          message.error(t('todo.importInvalidFile'));
           return;
         }
         Modal.confirm({
-          title: '确认全量导入',
+          title: t('todo.importConfirmTitle'),
           icon: <ExclamationCircleOutlined />,
-          content: `此操作将清空当前所有待办、分类和标签，并导入文件中的数据（${data.todos.length} 条待办、${data.categories?.length || 0} 个分类、${data.tags?.length || 0} 个标签）。此操作不可撤销，确认继续？`,
-          okText: '确认导入',
+          content: t('todo.importConfirmContent', {
+            todos: data.todos.length,
+            categories: data.categories?.length || 0,
+            tags: data.tags?.length || 0,
+          }),
+          okText: t('todo.importConfirm'),
           okButtonProps: { danger: true },
-          cancelText: '取消',
+          cancelText: t('common.cancel'),
           onOk: async () => {
             setImportLoading(true);
             try {
               const res = await todoApi.importData(data);
-              message.success(res.message || '导入成功');
+              message.success(res.message || t('todo.importSuccess'));
               queryClient.invalidateQueries();
             } catch (err) {
-              message.error(err.message || '导入失败');
+              message.error(err.message || t('todo.importFailed'));
             } finally {
               setImportLoading(false);
             }
           },
         });
       } catch {
-        message.error('文件解析失败，请选择有效的 JSON 文件');
+        message.error(t('todo.importParseFailed'));
       }
     };
     reader.readAsText(file);
@@ -155,7 +161,6 @@ export default function TodoList() {
     select: (res) => res.tags || res || [],
   });
 
-  // When a root category is selected, also fetch todos from its sub-categories
   const selectedCat = localCategories.find((c) => String(c.id) === selectedCategory);
   const isRootSelected = selectedCat && !selectedCat.parent_id;
 
@@ -187,7 +192,7 @@ export default function TodoList() {
   const deleteMutation = useMutation({
     mutationFn: todoApi.delete,
     onSuccess: () => {
-      message.success('已删除');
+      message.success(t('todo.deleted'));
       queryClient.invalidateQueries({ queryKey: ['todos'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -203,7 +208,7 @@ export default function TodoList() {
       setNewSubCatName('');
       setExpandedCategories((prev) => new Set([...prev, variables.parentId]));
     },
-    onError: () => message.error('创建失败'),
+    onError: () => message.error(t('todo.createFailed')),
   });
 
   const editCatMutation = useMutation({
@@ -212,7 +217,7 @@ export default function TodoList() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setEditingCat(null);
     },
-    onError: (err) => message.error(err?.response?.data?.message || '更新失败'),
+    onError: (err) => message.error(err?.response?.data?.message || t('todo.updateFailed')),
   });
 
   const categories = categoriesData?.categories || [];
@@ -231,7 +236,6 @@ export default function TodoList() {
     }
   }, [categories]);
 
-  // Derive tree structure
   const roots = localCategories.filter((c) => !c.parent_id);
   const getChildren = (parentId) => localCategories.filter((c) => c.parent_id === parentId);
 
@@ -262,7 +266,6 @@ export default function TodoList() {
 
   const handleSelectCategory = (id) => {
     setSelectedCategory(id);
-    // Auto-expand parent when a child is selected
     const cat = localCategories.find((c) => String(c.id) === id);
     if (cat?.parent_id) {
       setExpandedCategories((prev) => new Set([...prev, cat.parent_id]));
@@ -313,7 +316,7 @@ export default function TodoList() {
         <Layout.Sider width={260} className="category-sider" style={{ background: 'transparent' }}>
           <div className="category-panel">
             <div className="category-header">
-              <span className="category-header-label">分类</span>
+              <span className="category-header-label">{t('todo.categories')}</span>
               <AddCategoryButton onAdd={() => queryClient.invalidateQueries({ queryKey: ['categories'] })} />
             </div>
             <nav className="category-nav">
@@ -325,7 +328,7 @@ export default function TodoList() {
                 <div className="cat-nav-item-left">
                   <span className="cat-expand-toggle" style={{ visibility: 'hidden' }} />
                   <UnorderedListOutlined className="cat-nav-icon" style={{ fontSize: 12 }} />
-                  <span>全部</span>
+                  <span>{t('todo.all')}</span>
                 </div>
                 {totalPendingCount > 0 && (
                   <span className="cat-count">{totalPendingCount}</span>
@@ -385,7 +388,7 @@ export default function TodoList() {
                               <div className="cat-nav-item cat-nav-item--child cat-nav-item--adding">
                                 <Input
                                   size="small"
-                                  placeholder="子分类名称"
+                                  placeholder={t('todo.subCategoryPlaceholder')}
                                   value={newSubCatName}
                                   onChange={(e) => setNewSubCatName(e.target.value)}
                                   onPressEnter={() => handleSubmitSubCat(cat)}
@@ -404,7 +407,7 @@ export default function TodoList() {
                                   onClick={() => handleSubmitSubCat(cat)}
                                   loading={addSubCatMutation.isPending}
                                 >
-                                  确认
+                                  {t('common.confirm')}
                                 </Button>
                               </div>
                             )}
@@ -416,7 +419,7 @@ export default function TodoList() {
                 </SortableContext>
               </DndContext>
 
-              {/* Uncategorized (fixed, always at bottom) */}
+              {/* Uncategorized */}
               <div
                 className={`cat-nav-item cat-nav-item--uncategorized${selectedCategory === 'uncategorized' ? ' cat-nav-item--selected' : ''}`}
                 onClick={() => handleSelectCategory('uncategorized')}
@@ -424,7 +427,7 @@ export default function TodoList() {
                 <div className="cat-nav-item-left">
                   <span className="cat-expand-toggle" style={{ visibility: 'hidden' }} />
                   <span className="cat-dot cat-dot--uncategorized" />
-                  <span>未分类</span>
+                  <span>{t('todo.uncategorized')}</span>
                 </div>
                 {uncategorizedPendingCount > 0 && (
                   <span className="cat-count" style={{ background: '#f1f5f9', color: '#9ca3af' }}>
@@ -442,20 +445,20 @@ export default function TodoList() {
             <div className="toolbar-left">
               <div className="page-title">
                 {selectedCategory === 'all' ? (
-                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>全部 TODO</Title>
+                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>{t('todo.allTodo')}</Title>
                 ) : selectedCategory === 'uncategorized' ? (
-                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>未分类</Title>
+                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>{t('todo.uncategorized')}</Title>
                 ) : (
                   <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>
                     <span className="cat-badge" style={{ background: currentCategoryColor }} />
-                    {currentCategoryName || '分类'}
+                    {currentCategoryName || t('todo.category')}
                   </Title>
                 )}
               </div>
             </div>
             <Space wrap className="toolbar-right">
               <Search
-                placeholder="搜索..."
+                placeholder={t('todo.search')}
                 allowClear
                 style={{ width: 180 }}
                 onSearch={(v) => setFilters((f) => ({ ...f, search: v }))}
@@ -477,11 +480,11 @@ export default function TodoList() {
                 <Select
                   value={filters.tag_id}
                   onChange={(v) => setFilters((f) => ({ ...f, tag_id: v }))}
-                  placeholder="全部标签"
+                  placeholder={t('todo.allTags')}
                   allowClear
                   style={{ minWidth: 110 }}
-                  options={tagsData.map((t) => ({
-                    value: t.id,
+                  options={tagsData.map((tag) => ({
+                    value: tag.id,
                     label: (
                       <span>
                         <span
@@ -490,11 +493,11 @@ export default function TodoList() {
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            background: t.color,
+                            background: tag.color,
                             marginRight: 6,
                           }}
                         />
-                        {t.name}
+                        {tag.name}
                       </span>
                     ),
                   }))}
@@ -514,14 +517,14 @@ export default function TodoList() {
                     {
                       key: 'export',
                       icon: <ExportOutlined />,
-                      label: '导出数据',
+                      label: t('todo.export'),
                       onClick: handleExport,
                       disabled: exportLoading,
                     },
                     {
                       key: 'import',
                       icon: <ImportOutlined />,
-                      label: '导入数据',
+                      label: t('todo.import'),
                       onClick: () => importInputRef.current?.click(),
                       disabled: importLoading,
                     },
@@ -529,7 +532,7 @@ export default function TodoList() {
                 }}
                 trigger={['click']}
               >
-                <Button loading={exportLoading || importLoading}>更多操作</Button>
+                <Button loading={exportLoading || importLoading}>{t('todo.moreActions')}</Button>
               </Dropdown>
               <input
                 ref={importInputRef}
@@ -543,14 +546,14 @@ export default function TodoList() {
                 onClick={() => setShareModalOpen(true)}
                 style={{ color: '#22c55e', borderColor: '#22c55e' }}
               >
-                新建分享
+                {t('todo.newShare')}
               </Button>
               <Button
                 icon={<SettingOutlined />}
                 onClick={() => setShareLinksModalOpen(true)}
                 style={{ color: '#22c55e', borderColor: '#22c55e' }}
               >
-                管理链接
+                {t('todo.manageLinks')}
               </Button>
               <Button
                 type="primary"
@@ -558,7 +561,7 @@ export default function TodoList() {
                 onClick={handleNew}
                 className="btn-primary"
               >
-                新建
+                {t('todo.new')}
               </Button>
             </Space>
           </div>
@@ -569,11 +572,11 @@ export default function TodoList() {
             </div>
           ) : todos.length === 0 ? (
             <Empty
-              description={<Text type="secondary">暂无 TODO，点击新建开始吧</Text>}
+              description={<Text type="secondary">{t('todo.empty')}</Text>}
               style={{ paddingTop: 80 }}
             >
               <Button type="primary" onClick={handleNew} icon={<PlusOutlined />}>
-                新建 TODO
+                {t('todo.newTodo')}
               </Button>
             </Empty>
           ) : viewMode === 'list' ? (
@@ -628,10 +631,11 @@ export default function TodoList() {
 }
 
 function ListView({ todos, onEdit, onDelete, onStatusChange }) {
+  const { t } = useTranslation();
   const grouped = {
-    urgent: todos.filter((t) => t.priority === 'urgent' && t.status !== 'completed'),
-    active: todos.filter((t) => t.priority !== 'urgent' && t.status !== 'completed'),
-    completed: todos.filter((t) => t.status === 'completed'),
+    urgent: todos.filter((todo) => todo.priority === 'urgent' && todo.status !== 'completed'),
+    active: todos.filter((todo) => todo.priority !== 'urgent' && todo.status !== 'completed'),
+    completed: todos.filter((todo) => todo.status === 'completed'),
   };
 
   return (
@@ -640,7 +644,7 @@ function ListView({ todos, onEdit, onDelete, onStatusChange }) {
         <div className="todo-group">
           <div className="group-header">
             <div className="group-dot" style={{ background: '#ff4d6d' }} />
-            紧急 ({grouped.urgent.length})
+            {t('todo.urgentGroup')} ({grouped.urgent.length})
           </div>
           {grouped.urgent.map((todo) => (
             <TodoCard
@@ -657,7 +661,7 @@ function ListView({ todos, onEdit, onDelete, onStatusChange }) {
         <div className="todo-group">
           <div className="group-header">
             <div className="group-dot" style={{ background: '#7c6ef5' }} />
-            待完成 ({grouped.active.length})
+            {t('todo.activeGroup')} ({grouped.active.length})
           </div>
           {grouped.active.map((todo) => (
             <TodoCard
@@ -674,7 +678,7 @@ function ListView({ todos, onEdit, onDelete, onStatusChange }) {
         <div className="todo-group">
           <div className="group-header">
             <div className="group-dot" style={{ background: '#06d6a0' }} />
-            已完成 ({grouped.completed.length})
+            {t('todo.completedGroup')} ({grouped.completed.length})
           </div>
           {grouped.completed.map((todo) => (
             <TodoCard
@@ -692,10 +696,11 @@ function ListView({ todos, onEdit, onDelete, onStatusChange }) {
 }
 
 function KanbanView({ todos, onEdit, onDelete, onStatusChange }) {
+  const { t } = useTranslation();
   const columns = [
-    { key: 'pending', title: '待处理', color: '#94a3b8', todos: todos.filter((t) => t.status === 'pending') },
-    { key: 'in_progress', title: '进行中', color: '#6366f1', todos: todos.filter((t) => t.status === 'in_progress') },
-    { key: 'completed', title: '已完成', color: '#22c55e', todos: todos.filter((t) => t.status === 'completed') },
+    { key: 'pending',     title: t('todo.pending'),    color: '#94a3b8', todos: todos.filter((todo) => todo.status === 'pending') },
+    { key: 'in_progress', title: t('todo.inProgress'), color: '#6366f1', todos: todos.filter((todo) => todo.status === 'in_progress') },
+    { key: 'completed',   title: t('todo.completed'),  color: '#22c55e', todos: todos.filter((todo) => todo.status === 'completed') },
   ];
 
   return (
@@ -709,7 +714,7 @@ function KanbanView({ todos, onEdit, onDelete, onStatusChange }) {
             </div>
             <div className="kanban-items">
               {col.todos.length === 0 ? (
-                <div className="kanban-empty">暂无任务</div>
+                <div className="kanban-empty">{t('todo.kanbanEmpty')}</div>
               ) : (
                 col.todos.map((todo) => (
                   <TodoCard
@@ -730,15 +735,15 @@ function KanbanView({ todos, onEdit, onDelete, onStatusChange }) {
   );
 }
 
-// Sortable root category item
 function SortableRootCatItem({ cat, selected, onClick, hasChildren, isExpanded, onToggle, onAddSub, onEdit }) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1 };
 
   const actionMenu = {
     items: [
-      { key: 'edit', icon: <EditOutlined />, label: '编辑分类', onClick: () => onEdit() },
-      { key: 'add', icon: <PlusOutlined />, label: '新增子分类', onClick: () => onAddSub() },
+      { key: 'edit', icon: <EditOutlined />, label: t('todo.editCategory'), onClick: () => onEdit() },
+      { key: 'add', icon: <PlusOutlined />, label: t('todo.addSubCategory'), onClick: () => onAddSub() },
     ],
   };
 
@@ -776,14 +781,14 @@ function SortableRootCatItem({ cat, selected, onClick, hasChildren, isExpanded, 
   );
 }
 
-// Sortable child category item
 function SortableChildCatItem({ cat, selected, onClick, onEdit }) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1 };
 
   const actionMenu = {
     items: [
-      { key: 'edit', icon: <EditOutlined />, label: '编辑分类', onClick: () => onEdit() },
+      { key: 'edit', icon: <EditOutlined />, label: t('todo.editCategory'), onClick: () => onEdit() },
     ],
   };
 
@@ -816,6 +821,7 @@ function SortableChildCatItem({ cat, selected, onClick, onEdit }) {
 }
 
 function CategoryEditModal({ cat, allCategories, open, onClose, onSave, saving }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [color, setColor] = useState(cat?.color || PRESET_COLORS[0]);
 
@@ -830,7 +836,6 @@ function CategoryEditModal({ cat, allCategories, open, onClose, onSave, saving }
   }, [open, cat, form]);
 
   const hasChildren = allCategories.some((c) => c.parent_id === cat?.id);
-  // Root options: all roots except self
   const rootOptions = allCategories
     .filter((c) => !c.parent_id && c.id !== cat?.id)
     .map((c) => ({
@@ -858,31 +863,31 @@ function CategoryEditModal({ cat, allCategories, open, onClose, onSave, saving }
       title={
         <Space size={8}>
           <span className="cat-dot" style={{ background: color, width: 10, height: 10, display: 'inline-block', borderRadius: '50%' }} />
-          编辑分类
+          {t('todo.editCategory')}
         </Space>
       }
       open={open}
       onCancel={onClose}
       onOk={handleOk}
-      okText="保存"
-      cancelText="取消"
+      okText={t('common.save')}
+      cancelText={t('common.cancel')}
       confirmLoading={saving}
       width={360}
       forceRender
     >
       <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
-        <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入分类名称' }]}>
-          <Input placeholder="分类名称" />
+        <Form.Item name="name" label={t('todo.categoryName')} rules={[{ required: true, message: t('todo.categoryNameRequired') }]}>
+          <Input placeholder={t('todo.categoryNamePlaceholder')} />
         </Form.Item>
-        <Form.Item label="颜色">
+        <Form.Item label={t('todo.categoryColor')}>
           <ColorSwatches value={color} onChange={setColor} />
         </Form.Item>
         <Form.Item
           name="parent_id"
-          label="归属父分类"
-          extra={hasChildren ? '该分类已有子分类，不能再移入其他分类下' : '设为顶层分类，或选择一个父分类将其移入'}
+          label={t('todo.parentCategory')}
+          extra={hasChildren ? t('todo.hasChildrenNote') : t('todo.parentCategoryNote')}
         >
-          <Select disabled={hasChildren} options={[{ value: 'none', label: '顶层分类（无父级）' }, ...rootOptions]} />
+          <Select disabled={hasChildren} options={[{ value: 'none', label: t('todo.topLevel') }, ...rootOptions]} />
         </Form.Item>
       </Form>
     </Modal>
@@ -890,6 +895,7 @@ function CategoryEditModal({ cat, allCategories, open, onClose, onSave, saving }
 }
 
 function AddCategoryButton({ onAdd }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [color, setColor] = useState(() => randomCategoryColor());
@@ -904,7 +910,7 @@ function AddCategoryButton({ onAdd }) {
       setColor(randomCategoryColor());
       onAdd?.();
     },
-    onError: () => message.error('创建失败'),
+    onError: () => message.error(t('todo.createFailed')),
   });
 
   const handleCreate = () => {
@@ -921,7 +927,7 @@ function AddCategoryButton({ onAdd }) {
     <div style={{ width: 172 }}>
       <Input
         size="small"
-        placeholder="分类名称"
+        placeholder={t('todo.categoryNameInput')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onPressEnter={handleCreate}
@@ -929,8 +935,8 @@ function AddCategoryButton({ onAdd }) {
         prefix={<span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />}
       />
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 8 }}>
-        <Button size="small" onClick={() => { setOpen(false); setName(''); }}>取消</Button>
-        <Button size="small" type="primary" onClick={handleCreate} loading={mutation.isPending}>创建</Button>
+        <Button size="small" onClick={() => { setOpen(false); setName(''); }}>{t('common.cancel')}</Button>
+        <Button size="small" type="primary" onClick={handleCreate} loading={mutation.isPending}>{t('common.create')}</Button>
       </div>
     </div>
   );
@@ -943,7 +949,7 @@ function AddCategoryButton({ onAdd }) {
       onOpenChange={handleOpenChange}
       placement="bottomRight"
     >
-      <Tooltip title="新建分类">
+      <Tooltip title={t('todo.newCategoryTooltip')}>
         <Button
           type="text"
           size="small"

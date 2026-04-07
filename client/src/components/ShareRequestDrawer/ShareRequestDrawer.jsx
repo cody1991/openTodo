@@ -8,21 +8,15 @@ import gfm from '@bytemd/plugin-gfm';
 import highlight from '@bytemd/plugin-highlight';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { toUTCString } from '../../utils/date';
 import 'bytemd/dist/index.css';
 import 'highlight.js/styles/github-dark.css';
 import '../TodoEditor/TodoEditor.css';
 
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: '🟢 低优先级' },
-  { value: 'medium', label: '🟡 中优先级' },
-  { value: 'high', label: '🟠 高优先级' },
-  { value: 'urgent', label: '🔴 紧急' },
-];
-
 const plugins = [gfm(), highlight()];
 
-function buildCategoryOptions(allCategories) {
+function buildCategoryOptions(allCategories, thisCategory) {
   const rootCats = allCategories.filter((c) => !c.parent_id);
   const childCats = allCategories.filter((c) => c.parent_id);
   const rootsWithChildren = new Set(childCats.map((c) => c.parent_id));
@@ -54,7 +48,7 @@ function buildCategoryOptions(allCategories) {
       label: rootLabel,
       title: root.name,
       options: [
-        { value: root.id, label: <Space size={6}><span style={dotStyle} />{root.name}（本分类）</Space> },
+        { value: root.id, label: <Space size={6}><span style={dotStyle} />{root.name}{thisCategory}</Space> },
         ...groupChildren,
       ],
     };
@@ -69,12 +63,16 @@ export default function ShareRequestDrawer({
   tags = [],
   ownerTimezone = 'UTC',
 }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [content, setContent] = useState('');
   const [showExactTime, setShowExactTime] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const categoryOptions = useMemo(() => buildCategoryOptions(categories), [categories]);
+  const categoryOptions = useMemo(
+    () => buildCategoryOptions(categories, t('shareRequestDrawer.thisCategory')),
+    [categories, t]
+  );
 
   useEffect(() => {
     if (open) {
@@ -87,6 +85,13 @@ export default function ShareRequestDrawer({
       });
     }
   }, [open, form]);
+
+  const PRIORITY_OPTIONS = [
+    { value: 'low', label: t('shareRequestDrawer.priorityLow') },
+    { value: 'medium', label: t('shareRequestDrawer.priorityMedium') },
+    { value: 'high', label: t('shareRequestDrawer.priorityHigh') },
+    { value: 'urgent', label: t('shareRequestDrawer.priorityUrgent') },
+  ];
 
   const onFinish = async (values) => {
     setSubmitting(true);
@@ -105,10 +110,10 @@ export default function ShareRequestDrawer({
         },
         { withCredentials: true }
       );
-      message.success('已提交，分享主审核后会处理');
+      message.success(t('shareRequestDrawer.submitSuccess'));
       onClose();
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || '提交失败';
+      const msg = err.response?.data?.message || err.message || t('shareRequestDrawer.submitFailed');
       message.error(msg);
     } finally {
       setSubmitting(false);
@@ -117,19 +122,19 @@ export default function ShareRequestDrawer({
 
   return (
     <Drawer
-      title={<span style={{ fontWeight: 600 }}>提需求</span>}
+      title={<span style={{ fontWeight: 600 }}>{t('shareRequestDrawer.title')}</span>}
       open={open}
       onClose={onClose}
       footer={(
         <Space style={{ float: 'right' }}>
-          <Button onClick={onClose}>取消</Button>
+          <Button onClick={onClose}>{t('shareRequestDrawer.cancel')}</Button>
           <Button
             type="primary"
             loading={submitting}
             onClick={() => form.submit()}
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none' }}
           >
-            提交
+            {t('shareRequestDrawer.submit')}
           </Button>
         </Space>
       )}
@@ -138,19 +143,19 @@ export default function ShareRequestDrawer({
       <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ priority: 'high' }}>
         <Form.Item
           name="title"
-          label="标题"
-          rules={[{ required: true, message: '请输入标题' }]}
+          label={t('shareRequestDrawer.formTitle')}
+          rules={[{ required: true, message: t('shareRequestDrawer.formTitleRequired') }]}
         >
-          <Input placeholder="简要描述你的需求…" size="large" className="editor-input" />
+          <Input placeholder={t('shareRequestDrawer.formTitlePlaceholder')} size="large" className="editor-input" />
         </Form.Item>
 
-        <Form.Item name="contact" label="联系方式（选填）">
-          <Input placeholder="邮箱或昵称，便于对方回复" maxLength={200} />
+        <Form.Item name="contact" label={t('shareRequestDrawer.formContact')}>
+          <Input placeholder={t('shareRequestDrawer.formContactPlaceholder')} maxLength={200} />
         </Form.Item>
 
         <Row gutter={12}>
           <Col span={12}>
-            <Form.Item name="priority" label="优先级">
+            <Form.Item name="priority" label={t('shareRequestDrawer.formPriority')}>
               <Select options={PRIORITY_OPTIONS} />
             </Form.Item>
           </Col>
@@ -159,7 +164,7 @@ export default function ShareRequestDrawer({
               name="due_date"
               label={(
                 <Space size={6}>
-                  <span>期望完成时间</span>
+                  <span>{t('shareRequestDrawer.formDueDate')}</span>
                   <Switch
                     size="small"
                     checked={showExactTime}
@@ -170,8 +175,8 @@ export default function ShareRequestDrawer({
                         if (cur) form.setFieldValue('due_date', cur.startOf('day'));
                       }
                     }}
-                    checkedChildren="精确时间"
-                    unCheckedChildren="精确时间"
+                    checkedChildren={t('shareRequestDrawer.formExactTime')}
+                    unCheckedChildren={t('shareRequestDrawer.formExactTime')}
                   />
                 </Space>
               )}
@@ -180,7 +185,7 @@ export default function ShareRequestDrawer({
                 showTime={showExactTime ? { format: 'HH:mm', defaultValue: dayjs('23:59', 'HH:mm') } : false}
                 format={showExactTime ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'}
                 style={{ width: '100%' }}
-                placeholder="选择日期"
+                placeholder={t('shareRequestDrawer.formDatePlaceholder')}
               />
             </Form.Item>
           </Col>
@@ -188,24 +193,24 @@ export default function ShareRequestDrawer({
 
         <Row gutter={12}>
           <Col span={12}>
-            <Form.Item name="category_id" label="分类">
+            <Form.Item name="category_id" label={t('shareRequestDrawer.formCategory')}>
               <Select
-                placeholder="选择分类"
+                placeholder={t('shareRequestDrawer.formCategoryPlaceholder')}
                 allowClear
                 options={categoryOptions}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="tag_ids" label="标签">
+            <Form.Item name="tag_ids" label={t('shareRequestDrawer.formTags')}>
               <Select
                 mode="multiple"
-                placeholder="选择标签"
+                placeholder={t('shareRequestDrawer.formTagsPlaceholder')}
                 allowClear
                 maxTagCount={3}
-                options={tags.map((t) => ({ value: t.id, label: t.name }))}
+                options={tags.map((tag) => ({ value: tag.id, label: tag.name }))}
                 tagRender={({ label, value, closable, onClose }) => {
-                  const tag = tags.find((t) => t.id === value);
+                  const tag = tags.find((tg) => tg.id === value);
                   return (
                     <Tag
                       color={tag?.color}
@@ -224,7 +229,7 @@ export default function ShareRequestDrawer({
 
         <Divider style={{ margin: '8px 0 16px' }} />
 
-        <div className="editor-label">内容（Markdown，可粘贴图片链接）</div>
+        <div className="editor-label">{t('shareRequestDrawer.formContent')}</div>
         <div className="bytemd-wrapper">
           <Editor value={content} plugins={plugins} onChange={setContent} />
         </div>

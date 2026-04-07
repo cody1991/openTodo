@@ -8,6 +8,7 @@ import {
   StarOutlined, InboxOutlined, TagsOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../stores/authStore';
 import { notificationApi, shareRequestApi } from '../../services/api';
 import NotificationBell from '../NotificationBell/NotificationBell';
@@ -32,6 +33,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAdmin } = useAuthStore();
+  const { t } = useTranslation();
 
   const { data: notifData } = useQuery({
     queryKey: ['notifications', 'unread'],
@@ -51,46 +53,46 @@ export default function AppLayout() {
 
   const navItems = useMemo(
     () => [
-      { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
-      { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO 列表' },
-      { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
-      { key: '/tags', icon: <TagsOutlined />, label: '标签管理' },
-      { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: '需求收件箱' },
-      { key: '/bookmarks', icon: <StarOutlined />, label: '网站收藏' },
-      { key: '/settings', icon: <SettingOutlined />, label: '设置' },
+      { key: '/dashboard', icon: <DashboardOutlined />, label: t('nav.overview') },
+      { key: '/todos', icon: <UnorderedListOutlined />, label: t('nav.todoList') },
+      { key: '/calendar', icon: <CalendarOutlined />, label: t('nav.calendar') },
+      { key: '/tags', icon: <TagsOutlined />, label: t('nav.tagManagement') },
+      { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: t('nav.inbox') },
+      { key: '/bookmarks', icon: <StarOutlined />, label: t('nav.bookmarks') },
+      { key: '/settings', icon: <SettingOutlined />, label: t('nav.settings') },
     ],
-    [pendingShareReqCount]
+    [pendingShareReqCount, t]
   );
 
   const mobileNavItems = useMemo(
     () => [
-      { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
-      { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO' },
-      { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
-      { key: '/tags', icon: <TagsOutlined />, label: '标签' },
-      { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: '收件箱' },
-      { key: '/bookmarks', icon: <StarOutlined />, label: '收藏' },
-      { key: '/settings', icon: <SettingOutlined />, label: '设置' },
+      { key: '/dashboard', icon: <DashboardOutlined />, label: t('nav.overview') },
+      { key: '/todos', icon: <UnorderedListOutlined />, label: t('nav.todo') },
+      { key: '/calendar', icon: <CalendarOutlined />, label: t('nav.calendar') },
+      { key: '/tags', icon: <TagsOutlined />, label: t('nav.tags') },
+      { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: t('nav.inbox_short') },
+      { key: '/bookmarks', icon: <StarOutlined />, label: t('nav.favorites') },
+      { key: '/settings', icon: <SettingOutlined />, label: t('nav.settings') },
     ],
-    [pendingShareReqCount]
+    [pendingShareReqCount, t]
   );
 
   const userMenuItems = [
     { key: 'who', label: <Text style={{ color: '#94a3b8', fontSize: 12 }}>{user?.email}</Text>, disabled: true },
     { type: 'divider' },
-    { key: 'settings', icon: <SettingOutlined />, label: '设置', onClick: () => navigate('/settings') },
-    ...(isAdmin() ? [{ key: 'admin', icon: <TeamOutlined />, label: '管理员', onClick: () => navigate('/admin') }] : []),
+    { key: 'settings', icon: <SettingOutlined />, label: t('nav.settings'), onClick: () => navigate('/settings') },
+    ...(isAdmin() ? [{ key: 'admin', icon: <TeamOutlined />, label: t('nav.admin'), onClick: () => navigate('/admin') }] : []),
     { type: 'divider' },
-    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true, onClick: async () => { await logout(); navigate('/'); } },
+    { key: 'logout', icon: <LogoutOutlined />, label: t('nav.logout'), danger: true, onClick: async () => { await logout(); navigate('/'); } },
   ];
 
   const siderItems = useMemo(() => {
     const admin = isAdmin();
     return [
       ...navItems,
-      ...(admin ? [{ key: '/admin', icon: <TeamOutlined />, label: '管理员' }] : []),
+      ...(admin ? [{ key: '/admin', icon: <TeamOutlined />, label: t('nav.admin') }] : []),
     ];
-  }, [navItems, user?.role_name]);
+  }, [navItems, user?.role_name, t]);
 
   return (
     <Layout className="app-layout">
