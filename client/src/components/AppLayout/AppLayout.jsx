@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import Draggable from 'react-draggable';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space, Button } from 'antd';
@@ -67,31 +67,48 @@ export default function AppLayout() {
     } catch {}
     return { x: 0, y: 0 };
   });
+  // Incrementing this key forces Draggable to remount with the updated defaultPosition
+  const [pillKey, setPillKey] = useState(0);
 
-  // Clamp back into viewport on first render (e.g. after window resize between sessions)
-  useEffect(() => {
-    const el = pillNodeRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const outOfBounds =
-      rect.right > window.innerWidth ||
-      rect.bottom > window.innerHeight ||
-      rect.left < 0 ||
-      rect.top < 0;
-    if (outOfBounds) {
-      const pos = { x: 0, y: 0 };
-      setPillPos(pos);
-      localStorage.setItem('opentodo-pill-pos-v2', JSON.stringify(pos));
-    }
+  const PILL_MARGIN = 8; // minimum gap between pill edge and any boundary
+
+  // Compute dx/dy needed to bring the pill's current DOM rect within safe bounds.
+  const calcClampDelta = useCallback((rect) => {
+    let dx = 0;
+    let dy = 0;
+    if (rect.right  > window.innerWidth  - PILL_MARGIN) dx = window.innerWidth  - PILL_MARGIN - rect.right;
+    if (rect.left   < PILL_MARGIN)                       dx = PILL_MARGIN - rect.left;
+    if (rect.bottom > window.innerHeight - PILL_MARGIN)  dy = window.innerHeight - PILL_MARGIN - rect.bottom;
+    if (rect.top    < PILL_MARGIN)                       dy = PILL_MARGIN - rect.top;
+    return { dx, dy };
   }, []);
 
-  const onPillDrag = (_, data) => {
-    setPillPos({ x: data.x, y: data.y });
-  };
+  // Nudge the pill back into safe bounds on mount and window resize.
+  // Does NOT write to localStorage — preserves the user's intended drag position
+  // so the pill returns to the original spot when the window is enlarged again.
+  const reclamp = useCallback(() => {
+    const el = pillNodeRef.current;
+    if (!el) return;
+    const { dx, dy } = calcClampDelta(el.getBoundingClientRect());
+    if (dx !== 0 || dy !== 0) {
+      setPillPos((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      setPillKey((k) => k + 1);
+    }
+  }, [calcClampDelta]);
+
+  useEffect(() => {
+    reclamp();
+    window.addEventListener('resize', reclamp);
+    return () => window.removeEventListener('resize', reclamp);
+  }, [reclamp]);
 
   const onPillStop = (_, data) => {
-    const pos = { x: data.x, y: data.y };
+    const el = pillNodeRef.current;
+    const rect = el?.getBoundingClientRect() ?? { left: 0, top: 0, right: 0, bottom: 0 };
+    const { dx, dy } = calcClampDelta(rect);
+    const pos = { x: data.x + dx, y: data.y + dy };
     setPillPos(pos);
+    if (dx !== 0 || dy !== 0) setPillKey((k) => k + 1);
     localStorage.setItem('opentodo-pill-pos-v2', JSON.stringify(pos));
   };
 
@@ -188,11 +205,11 @@ export default function AppLayout() {
 
       <Layout className="main-layout" style={{ marginLeft: collapsed ? 60 : 220 }}>
         <Draggable
+          key={pillKey}
           nodeRef={pillNodeRef}
-          position={pillPos}
-          onDrag={onPillDrag}
+          defaultPosition={pillPos}
           onStop={onPillStop}
-          bounds="window"
+
           cancel="button, a, .ant-dropdown-trigger, .ant-popover-open, [role='menuitem']"
         >
         <div ref={pillNodeRef} className="app-header">

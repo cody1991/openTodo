@@ -116,7 +116,10 @@
   align-items: center !important;
   justify-content: flex-end !important;
   gap: 4px !important;
+  will-change: transform;
+  user-select: none;
 }
+.app-header:active { cursor: grabbing; }
 
 .header-right { display: flex; align-items: center; gap: 6px; }
 .mobile-logo { display: none; align-items: center; gap: 8px; }
