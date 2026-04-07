@@ -280,18 +280,6 @@
 }
 .sv-cat-right { display: flex; align-items: center; gap: 10px; }
 
-.sv-progress-bar {
-  width: 72px; height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px; overflow: hidden;
-}
-.sv-progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.6s ease;
-}
-.sv-progress-text { font-size: 12px; font-weight: 600; color: #94a3b8; min-width: 28px; text-align: right; }
-
 /* ===== PARENT BODY ===== */
 .sv-parent-body { padding: 0; }
 
@@ -312,8 +300,6 @@
   background: #cbd5e1; margin-right: 2px;
 }
 .sv-sub-name { font-size: 13px; font-weight: 600; color: #475569; }
-.sv-progress-bar--sm { width: 48px; }
-
 /* ===== TODO LIST ===== */
 .sv-todo-list {
   padding: 8px 10px 10px;
@@ -546,7 +532,6 @@
   .sv-stats { padding: 14px 16px; gap: 12px; }
   .sv-stat-divider { display: none; }
   .sv-share-title { font-size: 18px; }
-  .sv-progress-bar { width: 48px; }
   .sv-category-header { padding: 10px 14px; }
   .sv-todo-list { padding: 6px 8px 8px; }
   .sv-todo-list--sub { padding-left: 24px; }

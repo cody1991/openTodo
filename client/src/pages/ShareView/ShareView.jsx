@@ -122,8 +122,6 @@ function CatDot({ color }) {
 
 function SubCategorySection({ sub, todos, ownerTz }) {
   const [collapsed, setCollapsed] = useState(false);
-  const done = todos.filter((t) => t.status === 'completed').length;
-  const pct = todos.length > 0 ? Math.round((done / todos.length) * 100) : 0;
   return (
     <div className="sv-sub-section">
       <div className="sv-sub-header" onClick={() => setCollapsed(!collapsed)}>
@@ -133,13 +131,7 @@ function SubCategorySection({ sub, todos, ownerTz }) {
           <span className="sv-sub-name">{sub.name}</span>
           <span className="sv-cat-count">{todos.length}</span>
         </div>
-        <div className="sv-cat-right">
-          <div className="sv-progress-bar sv-progress-bar--sm">
-            <div className="sv-progress-fill" style={{ width: `${pct}%`, background: sub.color || '#6366f1' }} />
-          </div>
-          <span className="sv-progress-text">{pct}%</span>
-          <span className="sv-collapse-icon">{collapsed ? '▶' : '▼'}</span>
-        </div>
+        <span className="sv-collapse-icon">{collapsed ? '▶' : '▼'}</span>
       </div>
       {!collapsed && (
         <div className="sv-todo-list sv-todo-list--sub">
@@ -152,13 +144,7 @@ function SubCategorySection({ sub, todos, ownerTz }) {
 
 function ParentCategorySection({ parent, directTodos, subSections, ownerTz }) {
   const [collapsed, setCollapsed] = useState(false);
-  const allTodos = [
-    ...directTodos,
-    ...subSections.flatMap((s) => s.todos),
-  ];
-  const total = allTodos.length;
-  const done = allTodos.filter((t) => t.status === 'completed').length;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const total = directTodos.length + subSections.reduce((s, sec) => s + sec.todos.length, 0);
 
   return (
     <div className="sv-category-group">
@@ -168,13 +154,7 @@ function ParentCategorySection({ parent, directTodos, subSections, ownerTz }) {
           <span className="sv-cat-name">{parent.name}</span>
           <span className="sv-cat-count">{total}</span>
         </div>
-        <div className="sv-cat-right">
-          <div className="sv-progress-bar">
-            <div className="sv-progress-fill" style={{ width: `${pct}%`, background: parent.color || '#6366f1' }} />
-          </div>
-          <span className="sv-progress-text">{pct}%</span>
-          <span className="sv-collapse-icon">{collapsed ? '▶' : '▼'}</span>
-        </div>
+        <span className="sv-collapse-icon">{collapsed ? '▶' : '▼'}</span>
       </div>
       {!collapsed && (
         <div className="sv-parent-body">
