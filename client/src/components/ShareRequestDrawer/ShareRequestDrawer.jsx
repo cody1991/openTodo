@@ -68,6 +68,29 @@ export default function ShareRequestDrawer({
   const [content, setContent] = useState('');
   const [showExactTime, setShowExactTime] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImages = async (files) => {
+    setUploading(true);
+    try {
+      const urls = await Promise.all(
+        files.map(async (file) => {
+          const form = new FormData();
+          form.append('file', file);
+          const res = await axios.post(`/api/public/share/${shareKey}/upload-image`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          return { url: res.data.url, alt: file.name };
+        })
+      );
+      return urls;
+    } catch (err) {
+      message.error(err?.response?.data?.message || t('shareRequestDrawer.imageUploadFailed'));
+      return [];
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const categoryOptions = useMemo(
     () => buildCategoryOptions(categories, t('shareRequestDrawer.thisCategory')),
@@ -229,9 +252,17 @@ export default function ShareRequestDrawer({
 
         <Divider style={{ margin: '8px 0 16px' }} />
 
-        <div className="editor-label">{t('shareRequestDrawer.formContent')}</div>
+        <div className="editor-label">
+          {t('shareRequestDrawer.formContent')}
+          {uploading && <span style={{ color: '#6366f1', marginLeft: 8, fontSize: 12 }}>{t('shareRequestDrawer.imageUploading')}</span>}
+        </div>
         <div className="bytemd-wrapper">
-          <Editor value={content} plugins={plugins} onChange={setContent} />
+          <Editor
+            value={content}
+            plugins={plugins}
+            onChange={setContent}
+            uploadImages={uploadImages}
+          />
         </div>
       </Form>
     </Drawer>

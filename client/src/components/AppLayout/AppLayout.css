@@ -158,5 +158,7 @@
     border-bottom: 1px solid #e8eaf0 !important;
     justify-content: space-between !important;
     box-shadow: 0 1px 0 #f0f1f6 !important;
+    /* neutralize any desktop drag transform */
+    transform: none !important;
   }
 }

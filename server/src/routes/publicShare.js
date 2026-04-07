@@ -1,8 +1,44 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { Octokit } = require('@octokit/rest');
 const db = require('../db');
 const { validateCategoryOwnership, validateTagsOwnership } = require('../services/todoService');
 const { rateLimitShareRequest } = require('../middleware/rateLimitShareRequest');
 const { notifyNewShareRequestAsync } = require('../services/shareRequestNotify');
+
+// ── Public image upload (tied to a valid share key) ──────────
+const LOCAL_UPLOAD_DIR = path.join(__dirname, '../../../data/uploads');
+if (!fs.existsSync(LOCAL_UPLOAD_DIR)) fs.mkdirSync(LOCAL_UPLOAD_DIR, { recursive: true });
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+  },
+});
+
+async function uploadImage(buffer, filename) {
+  const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, IMAGE_BASE_URL } = process.env;
+  if (GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO) {
+    try {
+      const octokit = new Octokit({ auth: GITHUB_TOKEN });
+      const filePath = `opentodo/${filename}`;
+      await octokit.repos.createOrUpdateFileContents({
+        owner: GITHUB_OWNER, repo: GITHUB_REPO, path: filePath,
+        message: `Upload ${filename}`, content: buffer.toString('base64'),
+      });
+      const baseUrl = IMAGE_BASE_URL || `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main`;
+      return `${baseUrl}/${filePath}`;
+    } catch {}
+  }
+  const dest = path.join(LOCAL_UPLOAD_DIR, filename);
+  fs.writeFileSync(dest, buffer);
+  return `/uploads/${filename}`;
+}
 
 const router = express.Router();
 
@@ -223,6 +259,36 @@ router.post('/:key/requests', rateLimitShareRequest, (req, res) => {
     message: req.t('share.submitted'),
   });
 });
+
+// Public image upload — requires a valid (non-expired) share key as scope
+router.post(
+  '/:key/upload-image',
+  (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) return res.status(400).json({ message: err.message });
+      next();
+    });
+  },
+  async (req, res) => {
+    const { key } = req.params;
+    const link = db.prepare('SELECT id FROM share_links WHERE key = ?').get(key);
+    if (!link) return res.status(404).json({ message: req.t('share.notFound') });
+
+    if (!req.file) return res.status(400).json({ message: 'No file provided' });
+
+    const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const ext = (req.file.originalname.split('.').pop() || 'png').toLowerCase();
+    if (!ALLOWED_EXTS.includes(ext)) return res.status(400).json({ message: req.t('upload.unsupportedFormat') });
+
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    try {
+      const url = await uploadImage(req.file.buffer, filename);
+      res.json({ url });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
 
 // Record a view — called once by the client after the page loads
 router.post('/:key/view', (req, res) => {
