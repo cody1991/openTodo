@@ -23,6 +23,21 @@ function safeLine(s, maxLen) {
 function notifyNewShareRequestAsync({ ownerId, shareLinkName, title, priority, content, contact }) {
   setImmediate(() => {
     try {
+      // Always write an in-app notification
+      const notifTitle = `新分享需求：${String(title || '').slice(0, 60)}`;
+      const notifContent = [
+        `来源：${shareLinkName || '分享'}`,
+        contact ? `联系方式：${String(contact).slice(0, 100)}` : null,
+        content ? `摘要：${String(content).slice(0, 120)}` : null,
+      ].filter(Boolean).join(' · ');
+      db.prepare(
+        `INSERT INTO notifications (user_id, type, title, content) VALUES (?, 'share_request', ?, ?)`
+      ).run(ownerId, notifTitle, notifContent);
+    } catch (e) {
+      console.error('[shareRequestNotify] in-app insert failed:', e.message);
+    }
+
+    try {
       const row = db
         .prepare('SELECT wecom_webhook, notifications_enabled FROM users WHERE id = ?')
         .get(ownerId);
@@ -53,7 +68,7 @@ function notifyNewShareRequestAsync({ ownerId, shareLinkName, title, priority, c
 
       sendMarkdown(row.wecom_webhook, lines.join('\n'));
     } catch (e) {
-      console.error('[shareRequestNotify]', e.message);
+      console.error('[shareRequestNotify] wecom failed:', e.message);
     }
   });
 }

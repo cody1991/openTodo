@@ -41,7 +41,8 @@
     "todo": "TODO",
     "tags": "标签",
     "inbox_short": "收件箱",
-    "favorites": "收藏"
+    "favorites": "收藏",
+    "language": "语言"
   },
   "login": {
     "subtitle": "专注当下，掌控每一个任务",

@@ -41,7 +41,8 @@
     "todo": "TODO",
     "tags": "Tags",
     "inbox_short": "Inbox",
-    "favorites": "Favorieten"
+    "favorites": "Favorieten",
+    "language": "Taal"
   },
   "login": {
     "subtitle": "Blijf gefocust, beheer elke taak",

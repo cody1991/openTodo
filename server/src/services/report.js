@@ -101,62 +101,110 @@ async function sendDailyReports() {
 async function sendDueDateReminders() {
   const todos = db
     .prepare(
-      `SELECT t.*, u.wecom_webhook, u.username, u.timezone
+      `SELECT t.*, u.wecom_webhook, u.username, u.timezone, u.notifications_enabled
        FROM todos t
        JOIN users u ON t.user_id = u.id
        WHERE t.status != 'completed'
          AND t.due_date IS NOT NULL
          AND t.due_date BETWEEN CURRENT_TIMESTAMP AND DATETIME('now', '+24 hours')
-         AND t.notify_enabled = 1
-         AND u.notifications_enabled = 1
-         AND u.wecom_webhook IS NOT NULL`
+         AND t.notify_enabled = 1`
     )
     .all();
 
   const grouped = {};
   todos.forEach((t) => {
-    if (!grouped[t.user_id]) grouped[t.user_id] = { webhook: t.wecom_webhook, timezone: t.timezone, items: [] };
+    if (!grouped[t.user_id]) grouped[t.user_id] = {
+      webhook: t.wecom_webhook,
+      timezone: t.timezone,
+      notificationsEnabled: t.notifications_enabled,
+      items: [],
+    };
     grouped[t.user_id].items.push(t);
   });
 
-  for (const [, data] of Object.entries(grouped)) {
-    const tz = data.timezone || 'UTC';
-    const content =
-      `## ⏰ 即将到期提醒\n\n` +
-      data.items
-        .map((t) => {
-          const due = formatDueDate(t.due_date, tz);
-          return `> ${PRIORITY_EMOJI[t.priority] || '•'} **${t.title}** · 截止 ${due}`;
-        })
-        .join('\n') +
-      '\n\n_请及时处理以上事项_';
+  const alreadyNotified = db.prepare(
+    `SELECT 1 FROM notifications
+     WHERE user_id = ? AND type = 'due_reminder' AND title = ?
+       AND created_at >= DATE('now')`
+  );
+  const insertNotif = db.prepare(
+    `INSERT INTO notifications (user_id, type, title, content) VALUES (?, 'due_reminder', ?, ?)`
+  );
 
-    await sendMarkdown(data.webhook, content);
+  for (const [userId, data] of Object.entries(grouped)) {
+    const tz = data.timezone || 'UTC';
+
+    // In-app notifications (always, no webhook required)
+    if (data.notificationsEnabled) {
+      for (const t of data.items) {
+        const due = formatDueDate(t.due_date, tz);
+        const notifTitle = `截止提醒：${t.title}`;
+        if (!alreadyNotified.get(parseInt(userId), notifTitle)) {
+          insertNotif.run(parseInt(userId), notifTitle, `截止时间：${due}`);
+        }
+      }
+    }
+
+    // WeCom webhook (only if configured)
+    if (data.webhook) {
+      const content =
+        `## ⏰ 即将到期提醒\n\n` +
+        data.items
+          .map((t) => {
+            const due = formatDueDate(t.due_date, tz);
+            return `> ${PRIORITY_EMOJI[t.priority] || '•'} **${t.title}** · 截止 ${due}`;
+          })
+          .join('\n') +
+        '\n\n_请及时处理以上事项_';
+      await sendMarkdown(data.webhook, content);
+    }
   }
 
-  console.log(`[Reminder] Sent due-date reminders for ${todos.length} todo(s)`);
+  console.log(`[Reminder] Processed due-date reminders for ${todos.length} todo(s)`);
 }
 
 function updateOverdueStatus() {
-  const result = db
+  // Find todos that are newly overdue (is_overdue = 0 → 1)
+  const newlyOverdue = db
     .prepare(
+      `SELECT t.id, t.user_id, t.title, u.notifications_enabled
+       FROM todos t
+       JOIN users u ON t.user_id = u.id
+       WHERE t.status != 'completed'
+         AND t.due_date IS NOT NULL
+         AND t.due_date < CURRENT_TIMESTAMP
+         AND t.is_overdue = 0`
+    )
+    .all();
+
+  if (newlyOverdue.length > 0) {
+    db.prepare(
       `UPDATE todos SET is_overdue = 1
        WHERE status != 'completed'
          AND due_date IS NOT NULL
          AND due_date < CURRENT_TIMESTAMP
          AND is_overdue = 0`
-    )
-    .run();
+    ).run();
 
+    // Write in-app notifications for newly overdue todos
+    const insertNotif = db.prepare(
+      `INSERT INTO notifications (user_id, type, title, content) VALUES (?, 'overdue', ?, ?)`
+    );
+    for (const t of newlyOverdue) {
+      if (t.notifications_enabled) {
+        insertNotif.run(t.user_id, `已逾期：${t.title}`, '该任务已超过截止时间，请尽快处理。');
+      }
+    }
+
+    console.log(`[Overdue] Marked ${newlyOverdue.length} todo(s) as overdue`);
+  }
+
+  // Clear overdue flag for completed / no-due-date / future todos
   db.prepare(
     `UPDATE todos SET is_overdue = 0
      WHERE (status = 'completed' OR due_date IS NULL OR due_date >= CURRENT_TIMESTAMP)
        AND is_overdue = 1`
   ).run();
-
-  if (result.changes > 0) {
-    console.log(`[Overdue] Marked ${result.changes} todo(s) as overdue`);
-  }
 }
 
 module.exports = { sendDailyReports, sendDueDateReminders, updateOverdueStatus, generateDailyReport };

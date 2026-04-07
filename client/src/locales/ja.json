@@ -41,7 +41,8 @@
     "todo": "TODO",
     "tags": "タグ",
     "inbox_short": "受信箱",
-    "favorites": "お気に入り"
+    "favorites": "お気に入り",
+    "language": "言語"
   },
   "login": {
     "subtitle": "今に集中し、すべてのタスクを管理する",

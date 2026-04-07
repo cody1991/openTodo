@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import Draggable from 'react-draggable';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space, Button } from 'antd';
 import {
   DashboardOutlined, UnorderedListOutlined, CalendarOutlined,
-  SettingOutlined, LogoutOutlined,
+  SettingOutlined, LogoutOutlined, BellOutlined,
   TeamOutlined, CheckSquareOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
   StarOutlined, InboxOutlined, TagsOutlined, GlobalOutlined, CheckOutlined,
 } from '@ant-design/icons';
@@ -15,7 +16,7 @@ import { notificationApi, shareRequestApi } from '../../services/api';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import './AppLayout.css';
 
-const { Sider, Header, Content } = Layout;
+const { Sider, Content } = Layout;
 const { Text } = Typography;
 
 function shareReqNavIcon(count) {
@@ -51,6 +52,22 @@ export default function AppLayout() {
 
   const unreadCount = notifData?.unread_count || 0;
   const pendingShareReqCount = shareReqData?.pending_count || 0;
+
+  // ── Draggable pill ──────────────────────────────────────────
+  const pillNodeRef = useRef(null);
+  const [pillPos, setPillPos] = useState(() => {
+    try {
+      const s = localStorage.getItem('opentodo-pill-pos');
+      if (s) return JSON.parse(s);
+    } catch {}
+    return { x: 0, y: 0 };
+  });
+
+  const onPillStop = (_, data) => {
+    const pos = { x: data.x, y: data.y };
+    setPillPos(pos);
+    localStorage.setItem('opentodo-pill-pos', JSON.stringify(pos));
+  };
 
   const navItems = useMemo(
     () => [
@@ -96,6 +113,7 @@ export default function AppLayout() {
           </Space>
         ),
         onClick: () => i18n.changeLanguage(lang.value),
+        style: i18n.language === lang.value ? { color: '#6366f1', fontWeight: 500 } : {},
       })),
     },
     { type: 'divider' },
@@ -143,7 +161,13 @@ export default function AppLayout() {
       </Sider>
 
       <Layout className="main-layout" style={{ marginLeft: collapsed ? 60 : 220 }}>
-        <Header className="app-header">
+        <Draggable
+          nodeRef={pillNodeRef}
+          position={pillPos}
+          onStop={onPillStop}
+          cancel="button, a, .ant-dropdown-trigger, .ant-popover-open, [role='menuitem']"
+        >
+        <div ref={pillNodeRef} className="app-header">
           <div className="mobile-logo">
             <div className="logo-icon-wrap" style={{ width: 28, height: 28, fontSize: 13 }}>
               <CheckSquareOutlined />
@@ -154,19 +178,18 @@ export default function AppLayout() {
           <Space className="header-right">
             <NotificationBell unreadCount={unreadCount} />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-              <div className="user-trigger">
-                <Avatar
-                  size={28}
-                  src={user?.avatar}
-                  style={{ background: 'linear-gradient(135deg, #7c6ef5, #5b4de8)', flexShrink: 0 }}
-                >
-                  {user?.username?.[0]?.toUpperCase()}
-                </Avatar>
-                <Text className="username-text">{user?.username}</Text>
-              </div>
+              <Avatar
+                size={32}
+                src={user?.avatar}
+                className="user-avatar-btn"
+                style={{ background: 'linear-gradient(135deg, #7c6ef5, #5b4de8)', flexShrink: 0, cursor: 'pointer' }}
+              >
+                {user?.username?.[0]?.toUpperCase()}
+              </Avatar>
             </Dropdown>
           </Space>
-        </Header>
+        </div>
+        </Draggable>
 
         <Content className="app-content main-content-with-sider">
           <div className="content-inner bg-grid fade-in">

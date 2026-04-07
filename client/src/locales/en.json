@@ -41,7 +41,8 @@
     "todo": "TODO",
     "tags": "Tags",
     "inbox_short": "Inbox",
-    "favorites": "Favorites"
+    "favorites": "Favorites",
+    "language": "Language"
   },
   "login": {
     "subtitle": "Stay focused, master every task",

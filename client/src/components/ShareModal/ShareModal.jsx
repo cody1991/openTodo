@@ -561,7 +561,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
               <div style={{ flex: 1 }} />
               {isEditMode && (
                 <Button
-                  type={current === STEPS.length - 1 ? 'primary' : 'default'}
+                  type="primary"
                   icon={<CheckOutlined />}
                   loading={updateMutation.isPending}
                   onClick={handleCreate}

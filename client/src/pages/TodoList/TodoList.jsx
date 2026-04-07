@@ -306,12 +306,10 @@ export default function TodoList() {
     setEditorOpen(true);
   };
 
-  const currentCategoryColor = localCategories.find((c) => String(c.id) === selectedCategory)?.color;
-  const currentCategoryName = localCategories.find((c) => String(c.id) === selectedCategory)?.name;
 
   return (
     <div className="todo-list-page fade-in">
-      <Layout style={{ background: 'transparent', gap: 16 }}>
+      <Layout style={{ background: 'transparent', gap: 12 }}>
         {/* Category sidebar */}
         <Layout.Sider width={260} className="category-sider" style={{ background: 'transparent' }}>
           <div className="category-panel">
@@ -442,20 +440,6 @@ export default function TodoList() {
         {/* Main content */}
         <Layout.Content>
           <div className="todo-toolbar">
-            <div className="toolbar-left">
-              <div className="page-title">
-                {selectedCategory === 'all' ? (
-                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>{t('todo.allTodo')}</Title>
-                ) : selectedCategory === 'uncategorized' ? (
-                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>{t('todo.uncategorized')}</Title>
-                ) : (
-                  <Title level={4} style={{ margin: 0, color: '#e2e8f0' }}>
-                    <span className="cat-badge" style={{ background: currentCategoryColor }} />
-                    {currentCategoryName || t('todo.category')}
-                  </Title>
-                )}
-              </div>
-            </div>
             <Space wrap className="toolbar-right">
               <Search
                 placeholder={t('todo.search')}
