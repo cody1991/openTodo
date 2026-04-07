@@ -29,9 +29,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 40px 64px;
+  padding: 0 24px 64px;
 }
 
 /* ===== HEADER ===== */
@@ -544,7 +542,7 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
-  .sv-container { padding: 0 16px 48px; }
+  .sv-container { padding: 0 12px 48px; }
   .sv-stats { padding: 14px 16px; gap: 12px; }
   .sv-stat-divider { display: none; }
   .sv-share-title { font-size: 18px; }
