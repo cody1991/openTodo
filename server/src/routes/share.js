@@ -39,6 +39,7 @@ router.post('/', (req, res) => {
     date_start,
     date_end,
     expires_in,
+    theme = 'light',
   } = req.body;
 
   const key = uuidv4().replace(/-/g, '').slice(0, 16);
@@ -62,8 +63,8 @@ router.post('/', (req, res) => {
 
   const stmt = db.prepare(`
     INSERT INTO share_links
-      (user_id, key, name, headline, category_ids, excluded_todo_ids, statuses, date_field, date_start, date_end, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, key, name, headline, category_ids, excluded_todo_ids, statuses, date_field, date_start, date_end, expires_at, theme)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const result = stmt.run(
@@ -77,7 +78,8 @@ router.post('/', (req, res) => {
     date_field,
     date_start || null,
     date_end || null,
-    expires_at
+    expires_at,
+    theme
   );
 
   const link = db.prepare('SELECT * FROM share_links WHERE id = ?').get(result.lastInsertRowid);
@@ -106,6 +108,7 @@ router.put('/:id', (req, res) => {
     date_start,
     date_end,
     expires_in,
+    theme,
   } = req.body;
 
   let expires_at = link.expires_at;
@@ -131,7 +134,7 @@ router.put('/:id', (req, res) => {
     UPDATE share_links SET
       name = ?, headline = ?, category_ids = ?, excluded_todo_ids = ?,
       statuses = ?, date_field = ?, date_start = ?, date_end = ?,
-      expires_at = ?, updated_at = datetime('now')
+      expires_at = ?, theme = ?, updated_at = datetime('now')
     WHERE id = ? AND user_id = ?
   `).run(
     name ?? link.name,
@@ -143,6 +146,7 @@ router.put('/:id', (req, res) => {
     date_start !== undefined ? date_start : link.date_start,
     date_end !== undefined ? date_end : link.date_end,
     expires_at,
+    theme !== undefined ? theme : link.theme,
     req.params.id,
     req.user.id
   );

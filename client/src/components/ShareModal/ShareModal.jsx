@@ -66,6 +66,37 @@ const STEPS = [
   { title: '有效期', icon: <ClockCircleOutlined /> },
 ];
 
+const THEMES = [
+  {
+    value: 'light',
+    label: '清爽',
+    desc: '白底简洁，清晰易读',
+    preview: 'linear-gradient(135deg,#f8fafc 0%,#e0e7ff 100%)',
+    accent: '#6366f1',
+  },
+  {
+    value: 'dark',
+    label: '深色',
+    desc: '深蓝背景，科技感强',
+    preview: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)',
+    accent: '#818cf8',
+  },
+  {
+    value: 'vibrant',
+    label: '鲜艳',
+    desc: '彩色卡片，活泼有趣',
+    preview: 'linear-gradient(135deg,#fdf4ff 0%,#ffe4e6 50%,#fef9c3 100%)',
+    accent: '#ec4899',
+  },
+  {
+    value: 'minimal',
+    label: '极简',
+    desc: '去除装饰，专注内容',
+    preview: 'linear-gradient(135deg,#ffffff 0%,#f1f5f9 100%)',
+    accent: '#334155',
+  },
+];
+
 export default function ShareModal({ open, onClose, editLink = null }) {
   const isEditMode = !!editLink;
   const queryClient = useQueryClient();
@@ -91,6 +122,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
       : null
   );
   const [expiresIn, setExpiresIn] = useState(isEditMode ? KEEP_EXPIRES : 'never');
+  const [theme, setTheme] = useState(editLink?.theme ?? 'light');
 
 
   const { data: categoriesData } = useQuery({
@@ -185,6 +217,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
       date_start: dateRange ? dateRange[0].format('YYYY-MM-DD') : null,
       date_end: dateRange ? dateRange[1].format('YYYY-MM-DD') : null,
       ...(expiresIn !== KEEP_EXPIRES && { expires_in: expiresIn }),
+      theme,
     };
     if (isEditMode) {
       updateMutation.mutate({ id: editLink.id, data: payload });
@@ -212,6 +245,7 @@ export default function ShareModal({ open, onClose, editLink = null }) {
     setDateField('created_at');
     setDateRange(null);
     setExpiresIn('never');
+    setTheme('light');
   };
 
   const handleClose = () => {
@@ -249,6 +283,33 @@ export default function ShareModal({ open, onClose, editLink = null }) {
                   maxLength={200}
                   showCount
                 />
+              </div>
+              <div>
+                <div style={{ marginBottom: 10, fontSize: 13, color: '#374151', fontWeight: 500 }}>页面主题</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+                  {THEMES.map((t) => (
+                    <div
+                      key={t.value}
+                      onClick={() => setTheme(t.value)}
+                      style={{
+                        borderRadius: 10,
+                        border: `2px solid ${theme === t.value ? t.accent : '#e2e8f0'}`,
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        transition: 'border-color 0.2s, box-shadow 0.2s',
+                        boxShadow: theme === t.value ? `0 0 0 3px ${t.accent}22` : 'none',
+                      }}
+                    >
+                      <div style={{ height: 52, background: t.preview }} />
+                      <div style={{ padding: '6px 8px', background: '#fff' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: theme === t.value ? t.accent : '#374151' }}>
+                          {t.label}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{t.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

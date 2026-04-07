@@ -301,13 +301,22 @@ export default function ShareView() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
   const viewTracked = useRef(false);
+
+  const THEME_OPTIONS = [
+    { value: 'light',   label: '清爽' },
+    { value: 'dark',    label: '深色' },
+    { value: 'vibrant', label: '鲜艳' },
+    { value: 'minimal', label: '极简' },
+  ];
 
   useEffect(() => {
     axios
       .get(`/api/public/share/${key}`)
       .then((res) => {
         setData(res.data);
+        if (res.data?.share?.theme) setTheme(res.data.share.theme);
         setLoading(false);
         // Only record the view once, even in React StrictMode (which runs effects twice)
         if (!viewTracked.current) {
@@ -358,7 +367,7 @@ export default function ShareView() {
   const hasContent = todos.length > 0;
 
   return (
-    <div className="sv-root">
+    <div className={`sv-root sv-theme-${theme}`}>
       <div className="sv-container">
         {/* Header */}
         <header className="sv-header">
@@ -370,7 +379,19 @@ export default function ShareView() {
                 <span className="sv-owner-sub">的 TODO 分享</span>
               </div>
             </div>
-            <div className="sv-meta-row">
+            <div className="sv-header-right">
+              <div className="sv-theme-switcher">
+                {THEME_OPTIONS.map((t) => (
+                  <button
+                    key={t.value}
+                    className={`sv-theme-btn${theme === t.value ? ' sv-theme-btn--active' : ''}`}
+                    onClick={() => setTheme(t.value)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="sv-meta-row">
               <span className="sv-meta-item">👁️ {share.view_count}</span>
               <span className="sv-meta-item">📅 {dayjs(share.created_at).format('MM/DD')} 创建</span>
               {share.expires_at && (
@@ -378,6 +399,7 @@ export default function ShareView() {
                   ⏰ 至 {dayjs(share.expires_at).format('MM/DD')}
                 </span>
               )}
+            </div>
             </div>
           </div>
           {(share.name && share.name !== '我的分享' || share.headline) && (

@@ -133,6 +133,7 @@ router.get('/:key', (req, res) => {
       expires_at: link.expires_at,
       view_count: link.view_count,
       created_at: link.created_at,
+      theme: link.theme || 'light',
     },
     owner: {
       username: owner.username,

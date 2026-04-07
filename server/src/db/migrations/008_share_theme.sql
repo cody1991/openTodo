@@ -1,0 +1,1 @@
+ALTER TABLE share_links ADD COLUMN theme TEXT NOT NULL DEFAULT 'light';
