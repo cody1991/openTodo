@@ -10,6 +10,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
+import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
 import './ShareView.css';
 import ShareRequestDrawer from '../../components/ShareRequestDrawer/ShareRequestDrawer';
 
@@ -383,6 +384,17 @@ export default function ShareView() {
               </div>
             </div>
             <div className="sv-header-right">
+              <div className="sv-lang-switcher">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.value}
+                    className={`sv-lang-btn${i18n.language === lang.value ? ' sv-lang-btn--active' : ''}`}
+                    onClick={() => i18n.changeLanguage(lang.value)}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
               <div className="sv-theme-switcher">
                 {THEME_OPTIONS.map((opt) => (
                   <button
@@ -442,15 +454,28 @@ export default function ShareView() {
         </main>
 
         <footer className="sv-footer">
-          <span>Powered by </span>
-          <a
-            href="https://github.com/cody1991/openTodo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sv-footer-link"
-          >
-            OpenTodo
-          </a>
+          <div className="sv-footer-cta">
+            <span className="sv-footer-cta-text">{t('shareView.footerCta')}</span>
+            <a
+              href="https://todo.codytang.cn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sv-footer-cta-link"
+            >
+              {t('shareView.footerTryLink')}
+            </a>
+          </div>
+          <div className="sv-footer-powered">
+            <span>Powered by </span>
+            <a
+              href="https://github.com/cody1991/openTodo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sv-footer-link"
+            >
+              OpenTodo
+            </a>
+          </div>
         </footer>
 
         <ShareRequestDrawer

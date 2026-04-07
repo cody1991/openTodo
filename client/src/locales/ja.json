@@ -530,7 +530,9 @@
       "in_progress": "進行中",
       "pending": "未対応",
       "completed": "完了"
-    }
+    },
+    "footerCta": "自分の TODO を管理したいですか？",
+    "footerTryLink": "OpenTodo を無料で試す ↗"
   },
   "landing": {
     "enterApp": "アプリへ",

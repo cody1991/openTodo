@@ -530,7 +530,9 @@
       "in_progress": "进行中",
       "pending": "待处理",
       "completed": "已完成"
-    }
+    },
+    "footerCta": "想要管理自己的 TODO？",
+    "footerTryLink": "免费试用 OpenTodo ↗"
   },
   "notifications": {
     "title": "通知",

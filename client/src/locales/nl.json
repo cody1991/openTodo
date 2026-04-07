@@ -530,7 +530,9 @@
       "in_progress": "Bezig",
       "pending": "In afwachting",
       "completed": "Voltooid"
-    }
+    },
+    "footerCta": "Wil je je eigen TODO's beheren?",
+    "footerTryLink": "Probeer OpenTodo gratis ↗"
   },
   "landing": {
     "enterApp": "Naar App",

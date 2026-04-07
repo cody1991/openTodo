@@ -530,7 +530,9 @@
       "in_progress": "In Progress",
       "pending": "Pending",
       "completed": "Completed"
-    }
+    },
+    "footerCta": "Want to manage your own TODOs?",
+    "footerTryLink": "Try OpenTodo for free ↗"
   },
   "notifications": {
     "title": "Notifications",
