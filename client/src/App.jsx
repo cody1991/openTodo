@@ -14,6 +14,7 @@ const AdminPage = lazy(() => import('./pages/Admin/AdminPage'));
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'));
 const ShareRequestsPage = lazy(() => import('./pages/ShareRequests/ShareRequestsPage'));
 const ShareView = lazy(() => import('./pages/ShareView/ShareView'));
+const TagsPage = lazy(() => import('./pages/Tags/TagsPage'));
 
 function ProtectedRoute({ children }) {
   const user = useAuthStore((s) => s.user);
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/share-requests" element={<ShareRequestsPage />} />
+          <Route path="/tags" element={<TagsPage />} />
           <Route
             path="/admin"
             element={

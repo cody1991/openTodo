@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import dayjs from 'dayjs';
-import { todoApi, categoryApi } from '../../services/api';
+import { todoApi, categoryApi, tagApi } from '../../services/api';
 import TodoCard from '../../components/TodoCard/TodoCard';
 import TodoEditor from '../../components/TodoEditor/TodoEditor';
 import ShareModal from '../../components/ShareModal/ShareModal';
@@ -68,7 +68,7 @@ function ColorSwatches({ value, onChange }) {
 
 export default function TodoList() {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filters, setFilters] = useState({ status: '', priority: '', search: '' });
+  const [filters, setFilters] = useState({ status: '', priority: '', search: '', tag_id: undefined });
   const [viewMode, setViewMode] = useState('list');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState(null);
@@ -147,6 +147,12 @@ export default function TodoList() {
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
     queryFn: categoryApi.list,
+  });
+
+  const { data: tagsData } = useQuery({
+    queryKey: ['tags'],
+    queryFn: tagApi.list,
+    select: (res) => res.tags || res || [],
   });
 
   // When a root category is selected, also fetch todos from its sub-categories
@@ -467,6 +473,33 @@ export default function TodoList() {
                 options={PRIORITY_FILTERS}
                 style={{ width: 120 }}
               />
+              {tagsData?.length > 0 && (
+                <Select
+                  value={filters.tag_id}
+                  onChange={(v) => setFilters((f) => ({ ...f, tag_id: v }))}
+                  placeholder="全部标签"
+                  allowClear
+                  style={{ minWidth: 110 }}
+                  options={tagsData.map((t) => ({
+                    value: t.id,
+                    label: (
+                      <span>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: t.color,
+                            marginRight: 6,
+                          }}
+                        />
+                        {t.name}
+                      </span>
+                    ),
+                  }))}
+                />
+              )}
               <Segmented
                 value={viewMode}
                 onChange={setViewMode}

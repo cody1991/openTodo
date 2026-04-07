@@ -5,7 +5,7 @@ import {
   DashboardOutlined, UnorderedListOutlined, CalendarOutlined,
   SettingOutlined, UserOutlined, LogoutOutlined, BellOutlined,
   TeamOutlined, CheckSquareOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  StarOutlined, InboxOutlined,
+  StarOutlined, InboxOutlined, TagsOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '../../stores/authStore';
@@ -54,8 +54,9 @@ export default function AppLayout() {
       { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
       { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO 列表' },
       { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
-      { key: '/bookmarks', icon: <StarOutlined />, label: '网站收藏' },
+      { key: '/tags', icon: <TagsOutlined />, label: '标签管理' },
       { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: '需求收件箱' },
+      { key: '/bookmarks', icon: <StarOutlined />, label: '网站收藏' },
       { key: '/settings', icon: <SettingOutlined />, label: '设置' },
     ],
     [pendingShareReqCount]
@@ -66,8 +67,9 @@ export default function AppLayout() {
       { key: '/dashboard', icon: <DashboardOutlined />, label: '总览' },
       { key: '/todos', icon: <UnorderedListOutlined />, label: 'TODO' },
       { key: '/calendar', icon: <CalendarOutlined />, label: '日历' },
-      { key: '/bookmarks', icon: <StarOutlined />, label: '收藏' },
+      { key: '/tags', icon: <TagsOutlined />, label: '标签' },
       { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: '收件箱' },
+      { key: '/bookmarks', icon: <StarOutlined />, label: '收藏' },
       { key: '/settings', icon: <SettingOutlined />, label: '设置' },
     ],
     [pendingShareReqCount]
