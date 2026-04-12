@@ -28,9 +28,11 @@ function validateTagsOwnership(tagIds, userId) {
   return owned.length === tagIds.length;
 }
 
-/**
- * Create a todo for a user (used by POST /todos and share request approval).
- */
+const VALID_PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+const VALID_STATUSES = ['pending', 'in_progress', 'completed'];
+const MAX_TITLE_LENGTH = 500;
+const MAX_CONTENT_LENGTH = 50000;
+
 function createTodoForUser(userId, payload) {
   const {
     title,
@@ -48,6 +50,22 @@ function createTodoForUser(userId, payload) {
     throw err;
   }
   const safeTitle = String(title).trim();
+
+  if (safeTitle.length > MAX_TITLE_LENGTH) {
+    const err = new Error('Title is too long');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (content && String(content).length > MAX_CONTENT_LENGTH) {
+    const err = new Error('Content is too long');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (!VALID_PRIORITIES.includes(priority)) {
+    const err = new Error('Invalid priority');
+    err.statusCode = 400;
+    throw err;
+  }
 
   if (!validateCategoryOwnership(category_id, userId)) {
     const err = new Error('todos.categoryInvalid');
@@ -84,4 +102,8 @@ module.exports = {
   validateCategoryOwnership,
   validateTagsOwnership,
   createTodoForUser,
+  VALID_PRIORITIES,
+  VALID_STATUSES,
+  MAX_TITLE_LENGTH,
+  MAX_CONTENT_LENGTH,
 };

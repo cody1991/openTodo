@@ -17,6 +17,17 @@ import highlight from '@bytemd/plugin-highlight';
 const { Text } = Typography;
 const plugins = [gfm(), highlight()];
 
+const sanitizeSchema = (schema) => {
+  schema.tagNames = schema.tagNames?.filter(
+    (tag) => !['script', 'iframe', 'object', 'embed', 'form', 'input', 'textarea', 'select', 'button'].includes(tag)
+  );
+  schema.attributes = schema.attributes || {};
+  schema.attributes['*'] = (schema.attributes['*'] || []).filter(
+    (attr) => !['onload', 'onerror', 'onclick', 'onmouseover', 'onfocus', 'onblur'].includes(attr)
+  );
+  return schema;
+};
+
 export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compact = false }) {
   const [expanded, setExpanded] = useState(true);
   const tz = useAuthStore((s) => s.user?.timezone || 'UTC');
@@ -192,7 +203,7 @@ export default function TodoCard({ todo, onEdit, onDelete, onStatusChange, compa
           {expanded ? (
             <>
               <div className="markdown-preview-sm">
-                <Viewer value={todo.content} plugins={plugins} />
+                <Viewer value={todo.content} plugins={plugins} sanitize={sanitizeSchema} />
               </div>
               <Button
                 type="link"

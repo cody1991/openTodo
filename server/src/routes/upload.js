@@ -71,7 +71,7 @@ router.post(
       return res.status(400).json({ message: 'No file provided' });
     }
 
-    const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+    const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     const ext = (req.file.originalname.split('.').pop() || 'png').toLowerCase();
     if (!ALLOWED_EXTS.includes(ext)) {
       return res.status(400).json({ message: req.t('upload.unsupportedFormat') });

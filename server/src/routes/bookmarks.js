@@ -2,6 +2,17 @@ const express = require('express');
 const db = require('../db');
 const { authenticate } = require('../middleware/auth');
 
+const ALLOWED_URL_PROTOCOLS = ['http:', 'https:', 'ftp:', 'mailto:'];
+
+function isValidBookmarkUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_URL_PROTOCOLS.includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 const router = express.Router();
 router.use(authenticate);
 
@@ -51,6 +62,9 @@ router.get('/:id', (req, res) => {
 router.post('/', (req, res) => {
   const { title, url, description, favicon, category_id, tags = [], is_pinned = false } = req.body;
   if (!title || !url) return res.status(400).json({ message: 'Title and URL are required' });
+  if (!isValidBookmarkUrl(url)) {
+    return res.status(400).json({ message: 'Invalid URL. Only http, https, ftp, and mailto protocols are allowed.' });
+  }
 
   const result = db
     .prepare(
@@ -80,6 +94,9 @@ router.put('/:id', (req, res) => {
   if (!bm) return res.status(404).json({ message: 'Not found' });
 
   const { title, url, description, favicon, category_id, tags, is_pinned } = req.body;
+  if (url && !isValidBookmarkUrl(url)) {
+    return res.status(400).json({ message: 'Invalid URL. Only http, https, ftp, and mailto protocols are allowed.' });
+  }
   db.prepare(
     `UPDATE bookmarks SET
        title       = COALESCE(?, title),

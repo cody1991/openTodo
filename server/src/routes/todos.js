@@ -6,6 +6,10 @@ const {
   validateCategoryOwnership,
   validateTagsOwnership,
   createTodoForUser,
+  VALID_PRIORITIES,
+  VALID_STATUSES,
+  MAX_TITLE_LENGTH,
+  MAX_CONTENT_LENGTH,
 } = require('../services/todoService');
 
 const router = express.Router();
@@ -280,6 +284,19 @@ router.put('/:id', (req, res) => {
   if (!existing) return res.status(404).json({ message: 'Todo not found' });
 
   const { title, content, category_id, priority, due_date, status, tag_ids, notify_enabled } = req.body;
+
+  if (title !== undefined && String(title).trim().length > MAX_TITLE_LENGTH) {
+    return res.status(400).json({ message: 'Title is too long' });
+  }
+  if (content !== undefined && String(content).length > MAX_CONTENT_LENGTH) {
+    return res.status(400).json({ message: 'Content is too long' });
+  }
+  if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
+    return res.status(400).json({ message: 'Invalid priority' });
+  }
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ message: 'Invalid status' });
+  }
 
   if (category_id !== undefined && !validateCategoryOwnership(category_id, req.user.id)) {
     return res.status(400).json({ message: req.t('todos.categoryInvalid') });

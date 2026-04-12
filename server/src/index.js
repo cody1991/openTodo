@@ -8,6 +8,8 @@ if (!process.env.JWT_SECRET) {
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const { seed } = require('./db/seed');
@@ -29,9 +31,28 @@ const bookmarkShareRoutes = require('./routes/bookmarkShare');
 const publicBookmarkShareRoutes = require('./routes/publicBookmarkShare');
 
 const langMiddleware = require('./middleware/lang');
+const sanitizeInput = require('./middleware/sanitize');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.set('trust proxy', 1);
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
@@ -42,7 +63,28 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(sanitizeInput);
 app.use(langMiddleware);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: 'Too many attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const globalApiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  message: { message: 'Too many requests, please slow down' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', globalApiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -61,10 +103,18 @@ app.use('/api/share-requests', shareRequestsRoutes);
 app.use('/api/bookmark-share', bookmarkShareRoutes);
 app.use('/api/public/bookmark-share', publicBookmarkShareRoutes);
 
-// Serve locally uploaded images
+// Serve locally uploaded images with security headers
 const uploadsDir = require('path').join(__dirname, '../../data/uploads');
 if (!require('fs').existsSync(uploadsDir)) require('fs').mkdirSync(uploadsDir, { recursive: true });
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (req.path.toLowerCase().endsWith('.svg')) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Content-Disposition', 'attachment');
+  }
+  next();
+}, express.static(uploadsDir));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
