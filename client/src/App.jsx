@@ -14,6 +14,7 @@ const AdminPage = lazy(() => import('./pages/Admin/AdminPage'));
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'));
 const ShareRequestsPage = lazy(() => import('./pages/ShareRequests/ShareRequestsPage'));
 const ShareView = lazy(() => import('./pages/ShareView/ShareView'));
+const BookmarkShareView = lazy(() => import('./pages/BookmarkShareView/BookmarkShareView'));
 const TagsPage = lazy(() => import('./pages/Tags/TagsPage'));
 
 function ProtectedRoute({ children }) {
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/share/:key" element={<ShareView />} />
+        <Route path="/bookmark-share/:key" element={<BookmarkShareView />} />
 
         {/* Protected app routes – share the AppLayout */}
         <Route

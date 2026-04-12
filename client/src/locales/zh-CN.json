@@ -630,6 +630,38 @@
     "priorityUrgent": "🔴 紧急",
     "thisCategory": "（本分类）"
   },
+  "bookmarkShare": {
+    "title": "分享我的书签",
+    "editTitle": "编辑书签分享链接",
+    "defaultName": "我的书签分享",
+    "namePlaceholder": "给书签分享起个名字",
+    "headlinePlaceholder": "可选：如「我常用的开发工具和学习资源」",
+    "categoryHint": "不选则分享全部分类。勾选后只分享选中的分类。",
+    "shareAll": "分享全部分类",
+    "blockHint": "勾选要屏蔽的书签，被屏蔽的书签不会出现在分享页中。",
+    "noBookmarks": "暂无书签可分享",
+    "newShare": "新建分享",
+    "manageLinks": "管理分享链接",
+    "linksTitle": "我的书签分享链接",
+    "linksEmpty": "还没有书签分享链接",
+    "createFirst": "创建第一个分享",
+    "steps": {
+      "basicInfo": "基本信息",
+      "selectCategories": "选择分类",
+      "blockItems": "屏蔽书签",
+      "validity": "有效期"
+    }
+  },
+  "bookmarkShareView": {
+    "subtitle": "的书签分享",
+    "totalBookmarks": "书签",
+    "totalCategories": "分类",
+    "pinned": "置顶",
+    "searchPlaceholder": "搜索书签…",
+    "noBookmarks": "暂无分享的书签",
+    "noResults": "没有匹配的书签",
+    "pinnedSection": "置顶书签"
+  },
   "shareLinksModal": {
     "title": "我的分享链接",
     "newShare": "新建分享",

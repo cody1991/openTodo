@@ -20,8 +20,8 @@ api.interceptors.response.use(
       url.includes('/auth/login') ||
       url.includes('/auth/register') ||
       url.includes('/auth/me');
-    const isPublicEndpoint = url.includes('/public/share/');
-    const isSharePage = window.location.pathname.startsWith('/share/');
+    const isPublicEndpoint = url.includes('/public/share/') || url.includes('/public/bookmark-share/');
+    const isSharePage = window.location.pathname.startsWith('/share/') || window.location.pathname.startsWith('/bookmark-share/');
     if (err.response?.status === 401 && !isAuthEndpoint && !isPublicEndpoint && !isSharePage) {
       window.location.href = '/login';
     }
@@ -118,6 +118,13 @@ export const shareApi = {
   update: (id, data) => api.put(`/share/${id}`, data),
   delete: (id) => api.delete(`/share/${id}`),
   getPublic: (key) => api.get(`/public/share/${key}`),
+};
+
+export const bookmarkShareApi = {
+  list: () => api.get('/bookmark-share'),
+  create: (data) => api.post('/bookmark-share', data),
+  update: (id, data) => api.put(`/bookmark-share/${id}`, data),
+  delete: (id) => api.delete(`/bookmark-share/${id}`),
 };
 
 export const shareRequestApi = {

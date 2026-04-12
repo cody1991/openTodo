@@ -579,6 +579,38 @@
     },
     "mockNav": ["Overview", "TODO List", "Calendar", "Bookmarks", "Settings"]
   },
+  "bookmarkShare": {
+    "title": "Share My Bookmarks",
+    "editTitle": "Edit Bookmark Share Link",
+    "defaultName": "My Bookmark Share",
+    "namePlaceholder": "Name this bookmark share",
+    "headlinePlaceholder": "Optional: e.g. \"My favorite dev tools and learning resources\"",
+    "categoryHint": "Leave unchecked to share all categories, or check specific ones.",
+    "shareAll": "Share all categories",
+    "blockHint": "Check bookmarks to exclude them from the share page.",
+    "noBookmarks": "No bookmarks to share",
+    "newShare": "New Share",
+    "manageLinks": "Manage Share Links",
+    "linksTitle": "My Bookmark Share Links",
+    "linksEmpty": "No bookmark share links yet",
+    "createFirst": "Create your first share",
+    "steps": {
+      "basicInfo": "Basic Info",
+      "selectCategories": "Select Categories",
+      "blockItems": "Exclude Bookmarks",
+      "validity": "Validity"
+    }
+  },
+  "bookmarkShareView": {
+    "subtitle": "'s Bookmark Share",
+    "totalBookmarks": "Bookmarks",
+    "totalCategories": "Categories",
+    "pinned": "Pinned",
+    "searchPlaceholder": "Search bookmarks…",
+    "noBookmarks": "No bookmarks shared yet",
+    "noResults": "No matching bookmarks",
+    "pinnedSection": "Pinned Bookmarks"
+  },
   "shareRequests": {
     "pageTitle": "Request Inbox",
     "pageDesc": "Requests submitted by visitors on the share page. Once approved, they will be added to your TODO list.",

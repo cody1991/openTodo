@@ -665,6 +665,38 @@
     "priorityUrgent": "🔴 緊急",
     "thisCategory": "（このカテゴリ）"
   },
+  "bookmarkShare": {
+    "title": "ブックマークを共有",
+    "editTitle": "ブックマーク共有リンクを編集",
+    "defaultName": "マイブックマーク共有",
+    "namePlaceholder": "共有に名前を付ける",
+    "headlinePlaceholder": "オプション：例「よく使う開発ツールと学習リソース」",
+    "categoryHint": "未選択の場合、すべてのカテゴリが共有されます。",
+    "shareAll": "すべてのカテゴリを共有",
+    "blockHint": "除外するブックマークをチェックしてください。",
+    "noBookmarks": "共有できるブックマークがありません",
+    "newShare": "新規共有",
+    "manageLinks": "共有リンクを管理",
+    "linksTitle": "マイブックマーク共有リンク",
+    "linksEmpty": "ブックマーク共有リンクがまだありません",
+    "createFirst": "最初の共有を作成",
+    "steps": {
+      "basicInfo": "基本情報",
+      "selectCategories": "カテゴリ選択",
+      "blockItems": "ブックマーク除外",
+      "validity": "有効期限"
+    }
+  },
+  "bookmarkShareView": {
+    "subtitle": "のブックマーク共有",
+    "totalBookmarks": "ブックマーク",
+    "totalCategories": "カテゴリ",
+    "pinned": "ピン留め",
+    "searchPlaceholder": "ブックマークを検索…",
+    "noBookmarks": "共有されたブックマークはありません",
+    "noResults": "一致するブックマークがありません",
+    "pinnedSection": "ピン留めブックマーク"
+  },
   "shareLinksModal": {
     "title": "マイ共有リンク",
     "newShare": "新規共有",

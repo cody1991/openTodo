@@ -665,6 +665,38 @@
     "priorityUrgent": "🔴 Urgent",
     "thisCategory": " (deze categorie)"
   },
+  "bookmarkShare": {
+    "title": "Bladwijzers delen",
+    "editTitle": "Bladwijzer-deellink bewerken",
+    "defaultName": "Mijn bladwijzers-share",
+    "namePlaceholder": "Geef deze share een naam",
+    "headlinePlaceholder": "Optioneel: bijv. \"Mijn favoriete tools en leermiddelen\"",
+    "categoryHint": "Laat alles leeg om alle categorieën te delen, of selecteer specifieke.",
+    "shareAll": "Alle categorieën delen",
+    "blockHint": "Vink bladwijzers aan om ze uit te sluiten van de deelpagina.",
+    "noBookmarks": "Geen bladwijzers om te delen",
+    "newShare": "Nieuwe share",
+    "manageLinks": "Deellinks beheren",
+    "linksTitle": "Mijn bladwijzer-deellinks",
+    "linksEmpty": "Nog geen bladwijzer-deellinks",
+    "createFirst": "Maak je eerste share aan",
+    "steps": {
+      "basicInfo": "Basisinfo",
+      "selectCategories": "Categorieën selecteren",
+      "blockItems": "Bladwijzers uitsluiten",
+      "validity": "Geldigheid"
+    }
+  },
+  "bookmarkShareView": {
+    "subtitle": "'s bladwijzers-share",
+    "totalBookmarks": "Bladwijzers",
+    "totalCategories": "Categorieën",
+    "pinned": "Vastgepind",
+    "searchPlaceholder": "Bladwijzers zoeken…",
+    "noBookmarks": "Nog geen bladwijzers gedeeld",
+    "noResults": "Geen overeenkomende bladwijzers",
+    "pinnedSection": "Vastgepinde bladwijzers"
+  },
   "shareLinksModal": {
     "title": "Mijn deellinks",
     "newShare": "Nieuwe share",

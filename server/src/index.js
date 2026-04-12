@@ -25,6 +25,8 @@ const bookmarkRoutes = require('./routes/bookmarks');
 const shareRoutes = require('./routes/share');
 const publicShareRoutes = require('./routes/publicShare');
 const shareRequestsRoutes = require('./routes/shareRequests');
+const bookmarkShareRoutes = require('./routes/bookmarkShare');
+const publicBookmarkShareRoutes = require('./routes/publicBookmarkShare');
 
 const langMiddleware = require('./middleware/lang');
 
@@ -56,6 +58,8 @@ app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/share', shareRoutes);
 app.use('/api/public/share', publicShareRoutes);
 app.use('/api/share-requests', shareRequestsRoutes);
+app.use('/api/bookmark-share', bookmarkShareRoutes);
+app.use('/api/public/bookmark-share', publicBookmarkShareRoutes);
 
 // Serve locally uploaded images
 const uploadsDir = require('path').join(__dirname, '../../data/uploads');

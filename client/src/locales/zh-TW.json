@@ -665,6 +665,38 @@
     "priorityUrgent": "🔴 緊急",
     "thisCategory": "（本分類）"
   },
+  "bookmarkShare": {
+    "title": "分享我的書籤",
+    "editTitle": "編輯書籤分享連結",
+    "defaultName": "我的書籤分享",
+    "namePlaceholder": "為書籤分享取個名字",
+    "headlinePlaceholder": "可選：如「我常用的開發工具和學習資源」",
+    "categoryHint": "不選則分享全部分類。勾選後只分享選中的分類。",
+    "shareAll": "分享全部分類",
+    "blockHint": "勾選要屏蔽的書籤，被屏蔽的書籤不會出現在分享頁中。",
+    "noBookmarks": "暫無書籤可分享",
+    "newShare": "新建分享",
+    "manageLinks": "管理分享連結",
+    "linksTitle": "我的書籤分享連結",
+    "linksEmpty": "還沒有書籤分享連結",
+    "createFirst": "建立第一個分享",
+    "steps": {
+      "basicInfo": "基本資訊",
+      "selectCategories": "選擇分類",
+      "blockItems": "屏蔽書籤",
+      "validity": "有效期"
+    }
+  },
+  "bookmarkShareView": {
+    "subtitle": "的書籤分享",
+    "totalBookmarks": "書籤",
+    "totalCategories": "分類",
+    "pinned": "置頂",
+    "searchPlaceholder": "搜尋書籤…",
+    "noBookmarks": "暫無分享的書籤",
+    "noResults": "沒有匹配的書籤",
+    "pinnedSection": "置頂書籤"
+  },
   "shareLinksModal": {
     "title": "我的分享連結",
     "newShare": "新建分享",

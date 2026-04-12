@@ -7,10 +7,13 @@ import {
   PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined,
   LinkOutlined, PushpinOutlined, PushpinFilled,
   FolderOutlined, FolderOpenOutlined, GlobalOutlined,
+  ShareAltOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { bookmarkApi, bookmarkCategoryApi } from '../../services/api';
+import BookmarkShareModal from '../../components/BookmarkShareModal/BookmarkShareModal';
+import BookmarkShareLinksModal from '../../components/BookmarkShareLinksModal/BookmarkShareLinksModal';
 import './BookmarksPage.css';
 
 const COLOR_PRESETS = [
@@ -269,6 +272,8 @@ export default function BookmarksPage() {
   const [catModalOpen, setCatModalOpen] = useState(false);
   const [editingBm, setEditingBm] = useState(null);
   const [editingCat, setEditingCat] = useState(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareLinksOpen, setShareLinksOpen] = useState(false);
 
   const { data: catData, isLoading: catsLoading } = useQuery({
     queryKey: ['bookmark-categories'],
@@ -436,6 +441,12 @@ export default function BookmarksPage() {
               allowClear
               style={{ width: 220 }}
             />
+            <Tooltip title={t('bookmarkShare.newShare')}>
+              <Button icon={<ShareAltOutlined />} onClick={() => setShareModalOpen(true)} />
+            </Tooltip>
+            <Tooltip title={t('bookmarkShare.manageLinks')}>
+              <Button icon={<LinkOutlined />} onClick={() => setShareLinksOpen(true)} />
+            </Tooltip>
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -477,6 +488,8 @@ export default function BookmarksPage() {
       <CategoryModal open={catModalOpen}
         onClose={() => { setCatModalOpen(false); setEditingCat(null); }}
         categories={categories} editingCat={editingCat} />
+      <BookmarkShareModal open={shareModalOpen} onClose={() => setShareModalOpen(false)} />
+      <BookmarkShareLinksModal open={shareLinksOpen} onClose={() => setShareLinksOpen(false)} />
     </div>
   );
 }
