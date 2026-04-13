@@ -29,6 +29,14 @@ const COUNTRY_COLORS = [
 
 const STORAGE_KEY = 'opentodo-holiday-countries';
 
+const LANG_MAP = {
+  'zh-CN': 'zh',
+  'zh-TW': 'zh',
+  'ja': 'ja',
+  'en': 'en',
+  'nl': 'nl',
+};
+
 const hd = new Holidays();
 
 function getPopularCountries() {
@@ -43,15 +51,7 @@ function getPopularCountries() {
 function buildCountryOptions(t) {
   const allCountries = hd.getCountries();
   const popular = getPopularCountries();
-
-  const langMap = {
-    'zh-CN': 'zh',
-    'zh-TW': 'zh',
-    'ja': 'ja',
-    'en': 'en',
-    'nl': 'nl',
-  };
-  const lang = langMap[i18n.language] || 'en';
+  const lang = LANG_MAP[i18n.language] || 'en';
 
   const getName = (code) => {
     const localized = hd.getCountries(lang);
@@ -90,20 +90,14 @@ function countryFlag(code) {
 }
 
 function getHolidaysForYear(countryCode, year) {
-  const instance = new Holidays(countryCode);
+  const lang = LANG_MAP[i18n.language] || 'en';
+  const instance = new Holidays(countryCode, { languages: [lang] });
   const holidays = instance.getHolidays(year);
   return holidays.filter((h) => h.type === 'public');
 }
 
 function getCountryName(code) {
-  const langMap = {
-    'zh-CN': 'zh',
-    'zh-TW': 'zh',
-    'ja': 'ja',
-    'en': 'en',
-    'nl': 'nl',
-  };
-  const lang = langMap[i18n.language] || 'en';
+  const lang = LANG_MAP[i18n.language] || 'en';
   const localized = hd.getCountries(lang);
   return localized?.[code] || hd.getCountries()[code] || code;
 }
@@ -172,7 +166,8 @@ export default function HolidayCalendarPage() {
     });
 
     return events;
-  }, [selectedCountries, colorMap, viewYear]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCountries, colorMap, viewYear, i18n.language]);
 
   const handleDatesSet = useCallback(({ start }) => {
     const year = dayjs(start).add(15, 'day').year();
