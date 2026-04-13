@@ -42,7 +42,8 @@
     "tags": "タグ",
     "inbox_short": "受信箱",
     "favorites": "お気に入り",
-    "language": "言語"
+    "language": "言語",
+    "holidays": "祝日"
   },
   "login": {
     "subtitle": "今に集中し、すべてのタスクを管理する",
@@ -220,6 +221,25 @@
       "low": "低"
     },
     "completed": "完了"
+  },
+  "holidays": {
+    "title": "祝日カレンダー",
+    "selectCountry": "国を選択",
+    "searchPlaceholder": "国を検索...",
+    "noCountry": "祝日を表示するには、少なくとも1つの国を選択してください",
+    "popularCountries": "人気の国",
+    "otherCountries": "その他の国",
+    "today": "今日",
+    "month": "月",
+    "list": "リスト",
+    "date": "日付",
+    "country": "国",
+    "type": "種類",
+    "note": "備考",
+    "public": "国民の祝日",
+    "bank": "銀行休業日",
+    "school": "学校休業日",
+    "optional": "任意の休日"
   },
   "settings": {
     "title": "設定",

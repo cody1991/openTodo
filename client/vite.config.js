@@ -23,6 +23,7 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('@ant-design/charts')) return 'charts';
             if (id.includes('@fullcalendar')) return 'calendar';
+            if (id.includes('date-holidays') || id.includes('date-easter')) return 'holidays';
             if (id.includes('bytemd') || id.includes('@bytemd')) return 'editor';
             if (id.includes('antd') || id.includes('@ant-design')) return 'antd';
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'vendor';

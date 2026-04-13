@@ -42,7 +42,8 @@
     "tags": "Tags",
     "inbox_short": "Inbox",
     "favorites": "Favorieten",
-    "language": "Taal"
+    "language": "Taal",
+    "holidays": "Feestdagen"
   },
   "login": {
     "subtitle": "Blijf gefocust, beheer elke taak",
@@ -220,6 +221,25 @@
       "low": "Laag"
     },
     "completed": "Voltooid"
+  },
+  "holidays": {
+    "title": "Feestdagenkalender",
+    "selectCountry": "Landen selecteren",
+    "searchPlaceholder": "Landen zoeken...",
+    "noCountry": "Selecteer minstens één land om feestdagen te bekijken",
+    "popularCountries": "Populaire landen",
+    "otherCountries": "Overige landen",
+    "today": "Vandaag",
+    "month": "Maand",
+    "list": "Lijst",
+    "date": "Datum",
+    "country": "Land",
+    "type": "Type",
+    "note": "Opmerking",
+    "public": "Nationale feestdag",
+    "bank": "Bankfeestdag",
+    "school": "Schoolvakantie",
+    "optional": "Optionele feestdag"
   },
   "settings": {
     "title": "Instellingen",

@@ -16,6 +16,7 @@ const ShareRequestsPage = lazy(() => import('./pages/ShareRequests/ShareRequests
 const ShareView = lazy(() => import('./pages/ShareView/ShareView'));
 const BookmarkShareView = lazy(() => import('./pages/BookmarkShareView/BookmarkShareView'));
 const TagsPage = lazy(() => import('./pages/Tags/TagsPage'));
+const HolidayCalendarPage = lazy(() => import('./pages/HolidayCalendar/HolidayCalendarPage'));
 
 function ProtectedRoute({ children }) {
   const user = useAuthStore((s) => s.user);
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="/todos" element={<TodoList />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/holidays" element={<HolidayCalendarPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/share-requests" element={<ShareRequestsPage />} />
           <Route path="/tags" element={<TagsPage />} />

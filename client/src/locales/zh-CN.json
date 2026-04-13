@@ -42,7 +42,8 @@
     "tags": "标签",
     "inbox_short": "收件箱",
     "favorites": "收藏",
-    "language": "语言"
+    "language": "语言",
+    "holidays": "节假日"
   },
   "login": {
     "subtitle": "专注当下，掌控每一个任务",
@@ -220,6 +221,25 @@
       "low": "低"
     },
     "completed": "已完成"
+  },
+  "holidays": {
+    "title": "节假日日历",
+    "selectCountry": "选择国家",
+    "searchPlaceholder": "搜索国家...",
+    "noCountry": "请至少选择一个国家以查看节假日",
+    "popularCountries": "热门国家",
+    "otherCountries": "其他国家",
+    "today": "今天",
+    "month": "月",
+    "list": "列表",
+    "date": "日期",
+    "country": "国家",
+    "type": "类型",
+    "note": "备注",
+    "public": "法定节假日",
+    "bank": "银行假日",
+    "school": "学校假日",
+    "optional": "可选假日"
   },
   "settings": {
     "title": "设置",

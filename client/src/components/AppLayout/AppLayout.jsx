@@ -6,7 +6,7 @@ import {
   DashboardOutlined, UnorderedListOutlined, CalendarOutlined,
   SettingOutlined, LogoutOutlined, BellOutlined,
   TeamOutlined, CheckSquareOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  StarOutlined, InboxOutlined, TagsOutlined, GlobalOutlined, CheckOutlined,
+  StarOutlined, InboxOutlined, TagsOutlined, GlobalOutlined, CheckOutlined, ScheduleOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -117,6 +117,7 @@ export default function AppLayout() {
       { key: '/dashboard', icon: <DashboardOutlined />, label: t('nav.overview') },
       { key: '/todos', icon: <UnorderedListOutlined />, label: t('nav.todoList') },
       { key: '/calendar', icon: <CalendarOutlined />, label: t('nav.calendar') },
+      { key: '/holidays', icon: <ScheduleOutlined />, label: t('nav.holidays') },
       { key: '/tags', icon: <TagsOutlined />, label: t('nav.tagManagement') },
       { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: t('nav.inbox') },
       { key: '/bookmarks', icon: <StarOutlined />, label: t('nav.bookmarks') },
@@ -130,6 +131,7 @@ export default function AppLayout() {
       { key: '/dashboard', icon: <DashboardOutlined />, label: t('nav.overview') },
       { key: '/todos', icon: <UnorderedListOutlined />, label: t('nav.todo') },
       { key: '/calendar', icon: <CalendarOutlined />, label: t('nav.calendar') },
+      { key: '/holidays', icon: <ScheduleOutlined />, label: t('nav.holidays') },
       { key: '/tags', icon: <TagsOutlined />, label: t('nav.tags') },
       { key: '/share-requests', icon: shareReqNavIcon(pendingShareReqCount), label: t('nav.inbox_short') },
       { key: '/bookmarks', icon: <StarOutlined />, label: t('nav.favorites') },

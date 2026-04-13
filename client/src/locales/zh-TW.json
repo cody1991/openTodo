@@ -42,7 +42,8 @@
     "tags": "標籤",
     "inbox_short": "收件箱",
     "favorites": "收藏",
-    "language": "語言"
+    "language": "語言",
+    "holidays": "節假日"
   },
   "login": {
     "subtitle": "專注當下，掌控每一個任務",
@@ -220,6 +221,25 @@
       "low": "低"
     },
     "completed": "已完成"
+  },
+  "holidays": {
+    "title": "節假日行事曆",
+    "selectCountry": "選擇國家",
+    "searchPlaceholder": "搜尋國家...",
+    "noCountry": "請至少選擇一個國家以檢視節假日",
+    "popularCountries": "熱門國家",
+    "otherCountries": "其他國家",
+    "today": "今天",
+    "month": "月",
+    "list": "列表",
+    "date": "日期",
+    "country": "國家",
+    "type": "類型",
+    "note": "備註",
+    "public": "法定節假日",
+    "bank": "銀行假日",
+    "school": "學校假日",
+    "optional": "可選假日"
   },
   "settings": {
     "title": "設定",

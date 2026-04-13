@@ -42,7 +42,8 @@
     "tags": "Tags",
     "inbox_short": "Inbox",
     "favorites": "Favorites",
-    "language": "Language"
+    "language": "Language",
+    "holidays": "Holidays"
   },
   "login": {
     "subtitle": "Stay focused, master every task",
@@ -220,6 +221,25 @@
       "low": "Low"
     },
     "completed": "Completed"
+  },
+  "holidays": {
+    "title": "Holiday Calendar",
+    "selectCountry": "Select Countries",
+    "searchPlaceholder": "Search countries...",
+    "noCountry": "Please select at least one country to view holidays",
+    "popularCountries": "Popular Countries",
+    "otherCountries": "Other Countries",
+    "today": "Today",
+    "month": "Month",
+    "list": "List",
+    "date": "Date",
+    "country": "Country",
+    "type": "Type",
+    "note": "Note",
+    "public": "Public Holiday",
+    "bank": "Bank Holiday",
+    "school": "School Holiday",
+    "optional": "Optional Holiday"
   },
   "settings": {
     "title": "Settings",

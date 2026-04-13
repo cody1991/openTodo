@@ -1,0 +1,125 @@
+.holiday-calendar-page { width: 100%; }
+
+.holiday-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.holiday-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.holiday-country-select .ant-select-selector {
+  border-radius: 8px !important;
+}
+
+.holiday-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.holiday-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.holiday-calendar-container {
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.holiday-event {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  overflow: hidden;
+  padding: 1px 4px;
+  border-radius: 3px;
+  gap: 3px;
+}
+
+.holiday-event-flag {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.holiday-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.holiday-detail-modal .holiday-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0;
+}
+
+.holiday-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.holiday-detail-row .ant-typography-secondary {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.holiday-calendar-container .fc .fc-daygrid-day-frame {
+  min-height: 80px;
+}
+
+.holiday-calendar-container .fc .fc-daygrid-day-number {
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.holiday-calendar-container .fc-popover {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  .holiday-selector-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .holiday-legend {
+    gap: 10px;
+  }
+
+  .holiday-calendar-container {
+    padding: 8px;
+    border-radius: 10px;
+  }
+}
