@@ -275,6 +275,8 @@ export default function HolidayCalendarPage() {
             }}
             locale={fcLocale}
             firstDay={1}
+            fixedWeekCount={false}
+            showNonCurrentDates={false}
             events={calendarEvents}
             eventClick={handleEventClick}
             datesSet={handleDatesSet}
